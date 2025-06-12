@@ -2,9 +2,11 @@
 
 #pragma once
 
+#include "Loom/Core/Core.h"
+
 namespace Loom
 {
-    class Application
+    class LOOM_API Application
     {
         public:
             Application();
@@ -12,4 +14,7 @@ namespace Loom
 
             void Run();
    };
+
+    // To be defined in client
+    Application* CreateApplication();
 }
