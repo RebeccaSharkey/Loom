@@ -1,0 +1,60 @@
+﻿# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Build Directories ---
+Build/
+Bin/
+Out/
+
+# --- CMake ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# --- CLion Specific ---
+cmake-build-*/
+
+# ---  Visual Studio Specific ---
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.csproj
+Intermediate/
+
+# --- Logs & Dumps ---
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.sdf
+
+# --- Windows-specific ---
+*.exe
+*.dll
+*.pdb
+*.lib
+
+# --- Linux/macOS ---
+*.out
+*.a
+*.so
+*.dSYM/
+
+# --- Compiled/intermediate ---
+*.o
+*.obj
+
+# --- Misc ---
+*.user
+*.directory
