@@ -10,7 +10,7 @@ namespace Loom
 
     void Application::Run()
     {
-        std::cout << "Running..." << std::endl;
+        std::cout << "Running Loom Engine..." << std::endl;
         while (true);
     }
 }

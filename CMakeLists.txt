@@ -7,6 +7,3 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add Loom (Engine) subproject
 add_subdirectory(Loom)
-
-# Add Stitch (sandbox) subproject
-add_subdirectory(Stitch)
