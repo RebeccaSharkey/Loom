@@ -3,8 +3,11 @@
 #include "Loom/Renderer2D/Renderer2D.h"
 #include <iostream>
 
-
-void Renderer2D::Test()
+namespace Loom
 {
-    std::cout << "Test" << std::endl;
+    void Renderer2D::Test()
+    {
+        std::cout << "Test" << std::endl;
+    }
 }
+

@@ -4,8 +4,12 @@
 
 #include "Loom/Core/Core.h"
 
-class LOOM_API Renderer2D
+namespace Loom
 {
-public:
-    void Test();
-};
+    class LOOM_API Renderer2D
+    {
+    public:
+        void Test();
+    };
+}
+
