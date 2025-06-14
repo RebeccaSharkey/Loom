@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
+// Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #pragma once
 
