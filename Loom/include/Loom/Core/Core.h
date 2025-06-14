@@ -8,4 +8,6 @@
     #else
         #define LOOM_API __declspec(dllimport)
     #endif
+#else
+    #define LOOM_API
 #endif
