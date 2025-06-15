@@ -9,6 +9,7 @@ namespace Loom
     {
         DEBUG, // Log only to Console? (Normally only used for testing things...?)
         INFO, // Log to Console and Log File
+        NOTICE, // Log to Console and Log File
         WARNING, // Log to Console and Log File
         ERROR, // Log to Console and Log File
         CRITICAL, // CRASH - Log to Console and Log

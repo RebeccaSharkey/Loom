@@ -104,34 +104,38 @@ namespace Loom
     {
         const char* logLevelString = "";
         const char* logColour = "";
-        const char* resetColour = "\033[0m";
 
         switch (logLevel)
         {
             case LogLevel::DEBUG:
                 logLevelString = "DEBUG";
-                logColour = "\033[37m";
+                logColour = LOOM_LOG_WHITE;
                 break;
             case LogLevel::INFO:
-                logLevelString = "DEBUG";
-                logColour = "\033[37m";
+                logLevelString = "INFO";
+                logColour = LOOM_LOG_WHITE;
+                break;
+            case LogLevel::NOTICE:
+                logLevelString = "NOTICE";
+                logColour = LOOM_LOG_CYAN;
                 break;
             case LogLevel::WARNING:
                 logLevelString = "WARNING";
-                logColour = "\033[33m";
+                logColour = LOOM_LOG_YELLOW;
+                break;
             case LogLevel::ERROR:
                 logLevelString = "ERROR";
-                logColour = "\033[31m";
+                logColour = LOOM_LOG_RED;
                 break;
             case LogLevel::CRITICAL:
                 logLevelString = "CRITICAL";
-                logColour = "\033[1;31m";
+                logColour = LOOM_LOG_RED;
                 break;
             default:
                 logLevelString = "UNKNOWN";
-                logColour = resetColour;
+                logColour = LOOM_LOG_RESET;
         }
 
-        printf("%s[%s][%s] %s%s\n", logColour, logLevelString, tag, formattedMessage, resetColour);
+        printf("%s[%s][%s] %s%s\n", logColour, logLevelString, tag, formattedMessage, LOOM_LOG_RESET);
     }
 }

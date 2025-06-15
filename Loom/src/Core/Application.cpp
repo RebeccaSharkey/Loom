@@ -13,7 +13,7 @@ namespace Loom
 
     void Application::Run()
     {
-        LOOM_INFO("Application", "Running Loom Engine...");
+        LOOM_LOG_NOTICE("Application", "Running Loom Engine...");
         while (true);
     }
 }
