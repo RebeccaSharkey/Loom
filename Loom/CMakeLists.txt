@@ -2,6 +2,17 @@ project(LoomEngine)
 
 option(LOOM_ENABLE_RENDERER2D "Enable Renderer2D" ON)
 
+# ----------- Minimum Required ----------- #
+set(LOOM_MINIMUM_SOURCES
+        src/Log/Log.cpp
+)
+
+SET(LOOM_MINIMUM_HEADERS
+        include/Loom/EntryPoint.h
+        include/Loom/Log/LogLevels.h
+        include/Loom/Log/Log.h
+)
+
 # ----------- Core Module ----------- #
 set(LOOM_CORE_SOURCES
         src/Core/Application.cpp
@@ -12,13 +23,18 @@ set(LOOM_CORE_HEADERS
         include/Loom/Core/Application.h
 )
 
-# Add to master source list
+# ----------- MASTER SOURCE LIST ----------- #
+
 set(LOOM_ENGINE_SOURCES
+        ${LOOM_MINIMUM_SOURCES}
+        ${LOOM_MINIMUM_HEADERS}
         ${LOOM_CORE_SOURCES}
         ${LOOM_CORE_HEADERS}
 )
 
-# ----------- Optional: Renderer2D ----------- #
+# ----------- OPTIONAL MODULES ----------- #
+
+# --- Renderer2D --- #
 if(LOOM_ENABLE_RENDERER2D)
     set(LOOM_RENDERER2D_SOURCES
             src/Renderer2D/Renderer2D.cpp

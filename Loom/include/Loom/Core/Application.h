@@ -15,6 +15,6 @@ namespace Loom
             void Run();
    };
 
-    // To be defined in client
+    // To be defined in the client (Editor, Game, App...)
     Application* CreateApplication();
 }

@@ -3,7 +3,7 @@
 #pragma once
 
 #ifdef LOOM_PLATFORM_WINDOWS
-#include "Application.h"
+#include "Core/Application.h"
 
 extern Loom::Application* Loom::CreateApplication();
 

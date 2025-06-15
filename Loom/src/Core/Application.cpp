@@ -1,7 +1,10 @@
 // © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "Loom/Core/Application.h"
-#include <iostream>
+
+#include <format>
+
+#include "Loom/Log/Log.h"
 
 namespace Loom
 {
@@ -10,7 +13,7 @@ namespace Loom
 
     void Application::Run()
     {
-        std::cout << "Running Loom Engine..." << std::endl;
+        LOOM_INFO("Application", "Running Loom Engine...");
         while (true);
     }
 }
