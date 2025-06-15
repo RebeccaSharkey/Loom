@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Loom/Core/Core.h"
+#include "Core/Core.h"
 #include "LogLevels.h"
 
 namespace Loom

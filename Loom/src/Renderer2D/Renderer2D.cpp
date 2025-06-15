@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
 
-#include "Loom/Renderer2D/Renderer2D.h"
+#include "Renderer2D.h"
 #include <iostream>
 
 namespace Loom

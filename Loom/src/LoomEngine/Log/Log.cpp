@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
 
-#include "Loom/Log/Log.h"
+#include "Log/Log.h"
 
 #include <atomic>
 #include <chrono>

@@ -1,10 +1,7 @@
 // © 2025 Ctrl Alt Delete Games. All rights reserved.
 
-#include "Loom/Core/Application.h"
-
-#include <format>
-
-#include "Loom/Log/Log.h"
+#include "Core/Application.h"
+#include "Log/Log.h"
 
 namespace Loom
 {

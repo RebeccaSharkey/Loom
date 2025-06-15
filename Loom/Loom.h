@@ -2,5 +2,5 @@
 
 #pragma once
 
-#include "Loom/Core/Core.h"
-#include "Loom/Log/Log.h"
+#include "Core/Core.h"
+#include "Log/Log.h"
