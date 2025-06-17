@@ -1,0 +1,37 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25
+  },
+  "configurePresets": [
+    {
+      "name": "ninja",
+      "displayName": "CLion + Ninja",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Generated/Build-Ninja",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/Build",
+        "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/Build",
+        "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/Build"
+      }
+    },
+    {
+      "name": "msvc",
+      "displayName": "Visual Studio 2022",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/Generated/Build-MSVC",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/Build",
+        "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/Build",
+        "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/Build"
+      }
+    }
+  ]
+}

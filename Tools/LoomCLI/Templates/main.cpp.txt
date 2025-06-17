@@ -1,0 +1,15 @@
+// © 2025 Ctrl Alt Delete Games. All rights reserved.
+
+#include "EntryPoint.h"
+
+class {{PROJECT_NAME}} : public Loom::Application
+{
+public:
+    {{PROJECT_NAME}}() {};
+    ~{{PROJECT_NAME}}() {};
+};
+
+Loom::Application* Loom::CreateApplication()
+{
+    return new {{PROJECT_NAME}}();
+}

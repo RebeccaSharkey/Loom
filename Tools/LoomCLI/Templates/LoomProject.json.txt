@@ -1,0 +1,6 @@
+{
+  "projectName": "{{PROJECT_NAME}}",
+  "modules": {
+    "Render2D": true
+  }
+}

@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 3.25)
+project({{PROJECT_NAME}} LANGUAGES CXX)
+
+include(${CMAKE_CURRENT_LIST_DIR}/Generated/GameModules.cmake)
+
+add_subdirectory("D:/Personal/Loom/Loom" "${CMAKE_BINARY_DIR}/loom_build")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/Build)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/Build)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/Build)
+
+if (WIN32)
+    target_compile_definitions({{PROJECT_NAME}} PRIVATE LOOM_PLATFORM_WINDOWS)
+endif()
