@@ -7,18 +7,18 @@ namespace Loom
 {
     enum class LogLevel : uint8_t
     {
-        DEBUG, // Log only to Console? (Normally only used for testing things...?)
-        INFO, // Log to Console and Log File
-        NOTICE, // Log to Console and Log File
-        WARNING, // Log to Console and Log File
-        ERROR, // Log to Console and Log File
-        CRITICAL, // CRASH - Log to Console and Log
+        Debug, // Log only to Console? (Normally only used for testing things...?)
+        Info, // Log to Console and Log File
+        Notice, // Log to Console and Log File
+        Warning, // Log to Console and Log File
+        Error, // Log to Console and Log File
+        Critical, // CRASH - Log to Console and Log
         NONE //Don't log anything
     };
 
 // Define what level the engine/project will log to
 #ifndef LOOM_COMPILE_LOG_LEVEL
-#define LOOM_COMPILE_LOG_LEVEL Loom::LogLevel::DEBUG
+#define LOOM_COMPILE_LOG_LEVEL Loom::LogLevel::Debug
 #endif
 
     constexpr bool IsLogLevelEnabled(LogLevel level)

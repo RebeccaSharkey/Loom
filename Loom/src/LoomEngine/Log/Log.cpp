@@ -7,20 +7,26 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 
-#ifdef _win32
+#ifdef LOOM_PLATFORM_WINDOWS
 #include <Windows.h>
+#include <direct.h>
+#else
+#include <sys/stat.h>
 #endif
+
 
 namespace Loom
 {
     constexpr size_t MAX_LOG_ENTRIES = 1024;
     static LogMessage logMessages_LogBuffer[MAX_LOG_ENTRIES];
     static std::atomic<size_t> logMessages_CurrentIndex = 0;
+    static char logMessages_FileName[128] = {};
 
     void EnableVirtualTerminalMode()
     {
-#ifdef _win32
+#ifdef LOOM_PLATFORM_WINDOWS
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         DWORD dwMode = 0;
 
@@ -34,14 +40,40 @@ namespace Loom
 #endif
     }
 
-    void Log::Init()
+    void CreateLogDirectory()
+    {
+#ifdef LOOM_PLATFORM_WINDOWS
+        _mkdir("Logs");
+#else
+        mkdir("Logs", 0775);
+#endif
+    }
+
+    bool Log::Init()
     {
         EnableVirtualTerminalMode();
+        CreateLogDirectory();
+
+        const time_t now = time(nullptr);
+        const tm* timeInfo = localtime(&now);
+        snprintf(logMessages_FileName, sizeof(logMessages_FileName), "Logs/LoomLog_%04d%02d%02d_%02d%02d%02d.log",
+                 timeInfo->tm_year + 1900, timeInfo->tm_mon + 1, timeInfo->tm_mday,
+                 timeInfo->tm_hour, timeInfo->tm_min, timeInfo->tm_sec);
+
+        FILE* file = fopen(logMessages_FileName, "w");
+        if (!file)
+        {
+            std::cerr<<"Failed to create Log File."<<std::endl;
+            return false;
+        }
+
+        fclose(file);
+        return true;
     }
 
     void Log::Shutdown()
     {
-        // TODO: Flush files.
+        Flush();
     }
 
     void Log::Write(LogLevel logLevel, const char *tag, const char *message, ...)
@@ -53,7 +85,6 @@ namespace Loom
         int formattedMessage = vsnprintf(tempBuffer, sizeof(tempBuffer), message, args);
         va_end(args);
 
-        // Nothing written in the log???? exit.
         if (formattedMessage < 0)
         {
             return;
@@ -64,17 +95,20 @@ namespace Loom
             size_t index = logMessages_CurrentIndex.fetch_add(1, std::memory_order_relaxed) % MAX_LOG_ENTRIES;
             LogMessage& logMessage = logMessages_LogBuffer[index];
 
-            // TODO: Implement these for flushing the logs.
             logMessage.logLevel = logLevel;
             logMessage.tag = tag;
-            logMessage.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            logMessage.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
 
             snprintf(logMessage.message, sizeof(logMessage.message), "%s", tempBuffer);
             OutputToConsole(logLevel, tag, logMessage.message);
+
+            if ((index + 1) % MAX_LOG_ENTRIES == 0) {
+                Flush();
+            }
         }
         else
         {
-            // If the message is longer than 512 char, split it into separate logs
             int split = 511;
             while (split > 0 && tempBuffer[split] != ' ')
             {
@@ -97,7 +131,59 @@ namespace Loom
 
     void Log::Flush()
     {
-        // TODO: Write to file.
+        if (logMessages_FileName[0] == '\0')
+        {
+            return;
+        }
+
+        FILE* file = fopen(logMessages_FileName, "w");
+        if (!file)
+        {
+            return;
+        }
+
+        for (size_t i = 0; i < MAX_LOG_ENTRIES; ++i)
+        {
+            const LogMessage& log = logMessages_LogBuffer[i];
+
+            if (log.tag == nullptr || log.message[0] == '\0')
+            {
+                continue;
+            }
+
+            const char* levelStr = "UNKNOWN";
+            switch (log.logLevel)
+            {
+                case LogLevel::Debug:
+                    levelStr = "Debug";
+                    break;
+                case LogLevel::Info:
+                    levelStr = "Info";
+                    break;
+                case LogLevel::Notice:
+                    levelStr = "Notice";
+                    break;
+                case LogLevel::Warning:
+                    levelStr = "Warning";
+                    break;
+                case LogLevel::Error:
+                    levelStr = "Error";
+                    break;
+                case LogLevel::Critical:
+                    levelStr = "Critical";
+                    break;
+                default:
+                    break;
+            }
+
+            fprintf(file, "[%llu][%s][%s] %s\n",
+                    static_cast<unsigned long long>(log.timestamp),
+                    levelStr,
+                    log.tag,
+                    log.message);
+        }
+
+        fclose(file);
     }
 
     void Log::OutputToConsole(LogLevel logLevel, const char *tag, const char *formattedMessage, ...)
@@ -107,28 +193,28 @@ namespace Loom
 
         switch (logLevel)
         {
-            case LogLevel::DEBUG:
-                logLevelString = "DEBUG";
+            case LogLevel::Debug:
+                logLevelString = "Debug";
                 logColour = LOOM_LOG_WHITE;
                 break;
-            case LogLevel::INFO:
-                logLevelString = "INFO";
+            case LogLevel::Info:
+                logLevelString = "Info";
                 logColour = LOOM_LOG_WHITE;
                 break;
-            case LogLevel::NOTICE:
-                logLevelString = "NOTICE";
+            case LogLevel::Notice:
+                logLevelString = "Notice";
                 logColour = LOOM_LOG_CYAN;
                 break;
-            case LogLevel::WARNING:
-                logLevelString = "WARNING";
+            case LogLevel::Warning:
+                logLevelString = "Warning";
                 logColour = LOOM_LOG_YELLOW;
                 break;
-            case LogLevel::ERROR:
-                logLevelString = "ERROR";
+            case LogLevel::Error:
+                logLevelString = "Error";
                 logColour = LOOM_LOG_RED;
                 break;
-            case LogLevel::CRITICAL:
-                logLevelString = "CRITICAL";
+            case LogLevel::Critical:
+                logLevelString = "Critical";
                 logColour = LOOM_LOG_RED;
                 break;
             default:
@@ -137,5 +223,6 @@ namespace Loom
         }
 
         printf("%s[%s][%s] %s%s\n", logColour, logLevelString, tag, formattedMessage, LOOM_LOG_RESET);
+        fflush(stdout);
     }
 }
