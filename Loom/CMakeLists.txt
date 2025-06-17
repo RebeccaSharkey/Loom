@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Loom LANGUAGES CXX)
-
-# C++20 standard
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+project(LoomEngine LANGUAGES CXX)
 
 # ----------- Core Module ----------- #
 set(LOOM_CORE_SOURCES
@@ -19,20 +15,22 @@ set(LOOM_CORE_HEADERS
 # ----------- Minimum Required ----------- #
 set(LOOM_MINIMUM_SOURCES
         src/LoomEngine/Log/Log.cpp
+        src/LoomEngine/Events/Event.cpp
 )
 
 SET(LOOM_MINIMUM_HEADERS
         include/Loom/LoomEngine/Log/LogLevels.h
         include/Loom/LoomEngine/Log/Log.h
+        include/Loom/LoomEngine/Events/Event.h
 )
 
 # ----------- MASTER SOURCE LIST ----------- #
 
 set(LOOM_ENGINE_SOURCES
-        ${LOOM_MINIMUM_SOURCES}
-        ${LOOM_MINIMUM_HEADERS}
         ${LOOM_CORE_SOURCES}
         ${LOOM_CORE_HEADERS}
+        ${LOOM_MINIMUM_SOURCES}
+        ${LOOM_MINIMUM_HEADERS}
 )
 
 # ----------- Create Shared Library ----------- #
@@ -50,16 +48,16 @@ endif()
 
 # ----------- OPTIONAL MODULES ----------- #
 
-option(LOOM_ENABLE_RENDERER2D "Enable Renderer2D" ON)
+option(LOOM_ENABLE_RENDERER2D "Enable Renderer2D" OFF)
 
 # --- Renderer2D --- #
 if(LOOM_ENABLE_RENDERER2D)
     set(LOOM_RENDERER2D_SOURCES
-            src/Renderer2D/Renderer2D.cpp
+            src/LoomRender2D/Render2D.cpp
     )
 
     set(LOOM_RENDERER2D_HEADERS
-            include/Loom/Renderer2D/Renderer2D.h
+            include/Loom/LoomRender2D/Render2D.h
     )
 
     set(LOOM_RENDER2D_SOURCES
@@ -70,7 +68,7 @@ if(LOOM_ENABLE_RENDERER2D)
     add_library(LoomRender2D SHARED ${LOOM_RENDER2D_SOURCES})
 
     target_include_directories(LoomRender2D
-            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/Loom/Renderer2D
+            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/Loom/LoomRender2D
             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/Loom/LoomEngine
     )
 

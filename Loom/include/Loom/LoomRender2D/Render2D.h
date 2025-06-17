@@ -6,7 +6,7 @@
 
 namespace Loom
 {
-    class LOOM_API Renderer2D
+    class LOOM_API Render2D
     {
     public:
         void Test();
