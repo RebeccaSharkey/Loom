@@ -8,6 +8,9 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
 
 #ifdef LOOM_PLATFORM_WINDOWS
 #include <Windows.h>
@@ -16,13 +19,29 @@
 #include <sys/stat.h>
 #endif
 
+#ifdef LOOM_FORCE_CONSOLE_FLUSH
+    #define LOOM_FLUSH_STDOUT fflush(stdout);
+#else
+    #define LOOM_FLUSH_STDOUT
+#endif
+
 
 namespace Loom
 {
     constexpr size_t MAX_LOG_ENTRIES = 1024;
     static LogMessage logMessages_LogBuffer[MAX_LOG_ENTRIES];
     static std::atomic<size_t> logMessages_CurrentIndex = 0;
+    static std::atomic<size_t> logMessages_lastFlushedIndex = 0;
+
     static char logMessages_FileName[128] = {};
+    static constexpr size_t FLUSH_THRESHOLD = 32;
+    static constexpr uint64_t FLUSH_INTERVAL_MS = 1000;
+
+    static std::atomic<size_t> unflushedCount = 0;
+    static std::mutex flushMutex;
+    static std::condition_variable flushCV;
+    static bool shutdownRequested = false;
+    static std::thread flushThread;
 
     void EnableVirtualTerminalMode()
     {
@@ -66,13 +85,41 @@ namespace Loom
             std::cerr<<"Failed to create Log File."<<std::endl;
             return false;
         }
-
         fclose(file);
+
+        flushThread = std::thread([] {
+            while (!shutdownRequested)
+            {
+                std::unique_lock lock(flushMutex);
+                flushCV.wait_for(lock, std::chrono::milliseconds(FLUSH_INTERVAL_MS), []
+                    {
+                        return shutdownRequested || unflushedCount.load() >= FLUSH_THRESHOLD;
+                    });
+
+                if (unflushedCount.load() > 0)
+                {
+                    Flush();
+                    unflushedCount.store(0);
+                }
+            }
+        });
+
         return true;
     }
 
     void Log::Shutdown()
     {
+        {
+            std::lock_guard lock(flushMutex);
+            shutdownRequested = true;
+        }
+
+        flushCV.notify_one();
+        if (flushThread.joinable())
+        {
+            flushThread.join();
+        }
+
         Flush();
     }
 
@@ -99,12 +146,16 @@ namespace Loom
             logMessage.tag = tag;
             logMessage.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()).count();
-
             snprintf(logMessage.message, sizeof(logMessage.message), "%s", tempBuffer);
-            OutputToConsole(logLevel, tag, logMessage.message);
 
-            if ((index + 1) % MAX_LOG_ENTRIES == 0) {
-                Flush();
+
+#ifdef LOOM_DEBUG
+            OutputToConsole(logLevel, tag, logMessage.message);
+#endif
+
+            if (unflushedCount.fetch_add(1, std::memory_order_relaxed) >= FLUSH_THRESHOLD)
+            {
+                flushCV.notify_one();
             }
         }
         else
@@ -136,15 +187,18 @@ namespace Loom
             return;
         }
 
-        FILE* file = fopen(logMessages_FileName, "w");
+        FILE* file = fopen(logMessages_FileName, "a");
         if (!file)
         {
             return;
         }
 
-        for (size_t i = 0; i < MAX_LOG_ENTRIES; ++i)
+        const size_t start = logMessages_lastFlushedIndex.load(std::memory_order_acquire);
+        const size_t end = logMessages_CurrentIndex.load(std::memory_order_acquire);
+        for (size_t i = start; i < end; ++i)
         {
-            const LogMessage& log = logMessages_LogBuffer[i];
+            const size_t index = i % MAX_LOG_ENTRIES;
+            const LogMessage& log = logMessages_LogBuffer[index];
 
             if (log.tag == nullptr || log.message[0] == '\0')
             {
@@ -183,10 +237,11 @@ namespace Loom
                     log.message);
         }
 
+        logMessages_lastFlushedIndex.store(end, std::memory_order_release);
         fclose(file);
     }
 
-    void Log::OutputToConsole(LogLevel logLevel, const char *tag, const char *formattedMessage, ...)
+    void Log::OutputToConsole(const LogLevel logLevel, const char *tag, const char *formattedMessage, ...)
     {
         const char* logLevelString = "";
         const char* logColour = "";
@@ -223,6 +278,6 @@ namespace Loom
         }
 
         printf("%s[%s][%s] %s%s\n", logColour, logLevelString, tag, formattedMessage, LOOM_LOG_RESET);
-        fflush(stdout);
+        LOOM_FLUSH_STDOUT;
     }
 }

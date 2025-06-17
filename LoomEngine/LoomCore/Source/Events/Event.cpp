@@ -4,8 +4,6 @@
 
 namespace Loom
 {
-
-
     bool Event::GetHandled() const
     {
         return m_Handled;

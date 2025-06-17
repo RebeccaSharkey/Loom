@@ -11,3 +11,9 @@
 #else
     #define LOOM_API
 #endif
+
+// Comment to stop logging to Console
+#define LOOM_DEBUG
+
+// Comment to stop logging to Console immediately
+#define LOOM_FORCE_CONSOLE_FLUSH
