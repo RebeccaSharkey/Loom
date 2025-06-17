@@ -1,0 +1,44 @@
+@echo off
+setlocal ENABLEDELAYEDEXPANSION
+
+set SCRIPT_DIR=%~dp0
+cd /d %SCRIPT_DIR%\..
+set GAME_ROOT=%CD%
+
+set GAME_DLL_DIR=%GAME_ROOT%\Build
+
+set TOOLS_PATH=
+for /f "tokens=1,* delims==" %%a in ('findstr /i "tools=" "%GAME_ROOT%\*.loomproject"') do (
+    set TOOLS_PATH=%%b
+)
+
+set PROJECT_NAME=
+for /f "tokens=1,* delims==" %%a in ('findstr /i "project=" "%GAME_ROOT%\*.loomproject"') do (
+    set PROJECT_NAME=%%b
+)
+
+if not defined TOOLS_PATH (
+    echo Could not find tools path in .loomproject
+    pause
+    exit /b 1
+)
+
+echo Tools path: %TOOLS_PATH%
+
+if exist "%GAME_DLL_DIR%" (
+    echo Cleaning %GAME_DLL_DIR%
+    del /Q "%GAME_DLL_DIR%\*" > nul
+) else (
+    echo Creating %GAME_DLL_DIR%
+    mkdir "%GAME_DLL_DIR%"
+)
+
+set UPDATE_SCRIPT=%TOOLS_PATH%/LoomCLI/Scripts/LoomUpdateEngineModules.py
+if exist "%UPDATE_SCRIPT%" (
+    echo Running Update Engine Script...
+    python %UPDATE_SCRIPT% run %PROJECT_NAME% %GAME_ROOT%
+) else (
+    echo LoomUpdateEngineModules.py not found at: %UPDATE_SCRIPT%
+)
+
+pause

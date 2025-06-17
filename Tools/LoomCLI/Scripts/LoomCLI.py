@@ -27,6 +27,12 @@ def create_project_structure(project_name, destination_path):
     with open(TEMPLATE_DIR / "CMakePresets.json.txt") as f:
         (root / "CMakePresets.json").write_text(f.read())
 
+    with open(TEMPLATE_DIR / "UpdateEngine.bat.txt") as f:
+        (root / "Scripts" / "UpdateEngine.bat").write_text(f.read())
+
+    with open(TEMPLATE_DIR / "ReloadModules.bat.txt") as f:
+        (root / "Scripts" / "ReloadModules.bat").write_text(f.read())
+
     engine_path = Path(__file__).resolve().parents[3].as_posix()
     tools_path = Path(__file__).resolve().parents[2].as_posix()
 
