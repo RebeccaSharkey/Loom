@@ -7,6 +7,7 @@ def rewrite_cmake_options(project_name, project_root):
     from pathlib import Path
     root = Path(project_root)
 
+    engine_path = Path(__file__).resolve().parents[3].as_posix()
     config_path = root / "Config" / "LoomProject.json"
     modules_path = root / "Generated" / "GameModules.cmake"
 
@@ -25,16 +26,23 @@ def rewrite_cmake_options(project_name, project_root):
         f'file(GLOB_RECURSE GAME_HEADERS "${{CMAKE_CURRENT_SOURCE_DIR}}/Source/*.h")',
         f'add_executable({project_name} ${{GAME_SOURCES}} ${{GAME_HEADERS}})',
         f'target_include_directories({project_name} PRIVATE "${{CMAKE_CURRENT_SOURCE_DIR}}/Source")',
-        f'target_link_libraries({project_name} PRIVATE LoomEngine)'
     ]
 
     if enabled_modules.get("Render2D"):
-        lines.append(f'set(LOOM_ENABLE_RENDERER2D ON CACHE BOOL "Enable Renderer2D" FORCE)')
-        lines.append(f'target_link_libraries({project_name} PRIVATE LoomRender2D)')
-    else:
-        lines.append(f'set(LOOM_ENABLE_RENDERER2D OFF CACHE BOOL "Enable Renderer2D" FORCE)')
+        lines.append(f'')
+        lines.append(f'add_library(LoomRender2D SHARED IMPORTED)')
+        lines.append(f'set_target_properties(LoomRender2D PROPERTIES')
+        lines.append(f'        IMPORTED_LOCATION "{engine_path}/Build/Bin/libLoomRender2D.dll"')
+        lines.append(f'        IMPORTED_IMPLIB   "{engine_path}/Build/Lib/libLoomRender2D.dll.a"')
+        lines.append(f'        INTERFACE_INCLUDE_DIRECTORIES "{engine_path}/LoomEngine/LoomRender2D/Include"')
+        lines.append(f')')
+        lines.append(f'target_link_libraries(Stitch PRIVATE LoomRender2D)')
+        lines.append(f'add_custom_command(TARGET Stitch POST_BUILD')
+        lines.append(f'        COMMAND ${{CMAKE_COMMAND}} -E copy_if_different')
+        lines.append(f'        "{engine_path}/Build/Bin/libLoomRender2D.dll"')
+        lines.append(f'        "$<TARGET_FILE_DIR:Stitch>"')
+        lines.append(f')')
 
-    modules_path.write_text("")
     modules_path.write_text("\n".join(lines))
     print(f"Generated GameModules.cmake")
 
