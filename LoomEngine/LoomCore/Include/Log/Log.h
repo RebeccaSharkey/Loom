@@ -4,13 +4,14 @@
 
 #include "Core/Core.h"
 #include "LogLevels.h"
+#include <string_view>
 
 namespace Loom
 {
     struct LOOM_API LogMessage
     {
         LogLevel logLevel;
-        const char* tag;
+        std::string_view tag;
         char message[512];
         uint64_t timestamp;
     };
@@ -24,7 +25,7 @@ namespace Loom
         static void Flush();
 
     private:
-        static void OutputToConsole(LogLevel logLevel, const char* tag, const char* formattedMessage, ...);
+        static void OutputToConsole(LogLevel logLevel, const char* tag, const char* formattedMessage);
     };
 }
 

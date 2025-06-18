@@ -20,7 +20,7 @@
 #endif
 
 #ifdef LOOM_FORCE_CONSOLE_FLUSH
-    #define LOOM_FLUSH_STDOUT fflush(stdout);
+    #define LOOM_FLUSH_STDOUT do { fflush(stdout); } while(0);
 #else
     #define LOOM_FLUSH_STDOUT
 #endif
@@ -28,6 +28,8 @@
 
 namespace Loom
 {
+    static std::atomic<bool> logInitialized = false;
+
     constexpr size_t MAX_LOG_ENTRIES = 1024;
     static LogMessage logMessages_LogBuffer[MAX_LOG_ENTRIES];
     static std::atomic<size_t> logMessages_CurrentIndex = 0;
@@ -70,6 +72,11 @@ namespace Loom
 
     bool Log::Init()
     {
+        if (logInitialized.exchange(true))
+        {
+            return true;
+        }
+
         EnableVirtualTerminalMode();
         CreateLogDirectory();
 
@@ -87,23 +94,25 @@ namespace Loom
         }
         fclose(file);
 
-        flushThread = std::thread([] {
-            while (!shutdownRequested)
+        flushThread = std::thread([]
             {
-                std::unique_lock lock(flushMutex);
-                flushCV.wait_for(lock, std::chrono::milliseconds(FLUSH_INTERVAL_MS), []
-                    {
-                        return shutdownRequested || unflushedCount.load() >= FLUSH_THRESHOLD;
-                    });
-
-                if (unflushedCount.load() > 0)
+                while (!shutdownRequested)
                 {
-                    Flush();
-                    unflushedCount.store(0);
-                }
-            }
-        });
+                    std::unique_lock lock(flushMutex);
+                    flushCV.wait_for(lock, std::chrono::milliseconds(FLUSH_INTERVAL_MS), []
+                        {
+                            return shutdownRequested || unflushedCount.load() >= FLUSH_THRESHOLD;
+                        });
 
+                    if (unflushedCount.load() > 0)
+                    {
+                        Flush();
+                        unflushedCount.store(0);
+                    }
+                }
+            });
+
+        LOOM_LOG_INFO("Log", "Logger initialized successfully.");
         return true;
     }
 
@@ -143,10 +152,11 @@ namespace Loom
             LogMessage& logMessage = logMessages_LogBuffer[index];
 
             logMessage.logLevel = logLevel;
-            logMessage.tag = tag;
+            logMessage.tag = std::string_view(tag);
             logMessage.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()).count();
-            snprintf(logMessage.message, sizeof(logMessage.message), "%s", tempBuffer);
+            std::strncpy(logMessage.message, tempBuffer, sizeof(logMessage.message));
+            logMessage.message[sizeof(logMessage.message) - 1] = '\0';
 
 
 #ifdef LOOM_DEBUG
@@ -160,6 +170,7 @@ namespace Loom
         }
         else
         {
+            // TODO: UTF-8-safe split. Currently assumes ASCII.
             int split = 511;
             while (split > 0 && tempBuffer[split] != ' ')
             {
@@ -200,7 +211,7 @@ namespace Loom
             const size_t index = i % MAX_LOG_ENTRIES;
             const LogMessage& log = logMessages_LogBuffer[index];
 
-            if (log.tag == nullptr || log.message[0] == '\0')
+            if (log.message[0] == '\0')
             {
                 continue;
             }
@@ -230,10 +241,12 @@ namespace Loom
                     break;
             }
 
-            fprintf(file, "[%llu][%s][%s] %s\n",
+            const char* safeTag = log.tag.data() ? log.tag.data() : "NULL";
+
+            fprintf(file, "[%013llu][%-8s][%-12s] %s\n",
                     static_cast<unsigned long long>(log.timestamp),
                     levelStr,
-                    log.tag,
+                    safeTag,
                     log.message);
         }
 
@@ -241,7 +254,7 @@ namespace Loom
         fclose(file);
     }
 
-    void Log::OutputToConsole(const LogLevel logLevel, const char *tag, const char *formattedMessage, ...)
+    void Log::OutputToConsole(const LogLevel logLevel, const char *tag, const char *formattedMessage)
     {
         const char* logLevelString = "";
         const char* logColour = "";
