@@ -3,29 +3,21 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "LogLevels.h"
-#include <string_view>
+#include "Log/LogLevels.h"
+
 
 namespace Loom
 {
-    struct LOOM_API LogMessage
-    {
-        LogLevel logLevel;
-        std::string_view tag;
-        char message[512];
-        uint64_t timestamp;
-    };
-
     class LOOM_API Log
     {
-    public:
-        static bool Init();
-        static void Shutdown();
-        static void Write(LogLevel logLevel, const char* tag, const char* message, ...) __attribute__((format(printf, 3, 4)));
-        static void Flush();
+        public:
+            static bool Init();
+            static void Shutdown();
+            static void Write(LogLevel logLevel, const char* tag, const char* message, ...) __attribute__((format(printf, 3, 4)));
+            static void Flush();
 
-    private:
-        static void OutputToConsole(LogLevel logLevel, const char* tag, const char* formattedMessage);
+        private:
+            static void OutputToConsole(LogLevel logLevel, const char* tag, const char* formattedMessage);
     };
 }
 
@@ -47,13 +39,6 @@ namespace Loom
     LOOM_LOG(Loom::LogLevel::Critical, tag, __VA_ARGS__)
 
 
-#define LOOM_LOG_RESET "\033[0m"
-#define LOOM_LOG_RED "\033[31m"
-#define LOOM_LOG_YELLOW "\033[33m"
-#define LOOM_LOG_GREEN "\033[32m"
-#define LOOM_LOG_BLUE "\033[34m"
-#define LOOM_LOG_MAGENTA "\033[35m"
-#define LOOM_LOG_CYAN "\033[36m"
-#define LOOM_LOG_WHITE "\033[37m"
+
 
 

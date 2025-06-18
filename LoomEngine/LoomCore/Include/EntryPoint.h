@@ -2,17 +2,19 @@
 
 #pragma once
 
+#include "Core/Application.h"
+
 #ifdef LOOM_PLATFORM_WINDOWS
+
+#include "Log/Log.h"
+
 #include <iostream>
 #include <ostream>
-
-#include "Core/Application.h"
-#include "Log/Log.h"
 #include <Windows.h>
 
 extern Loom::Application* Loom::CreateApplication();
 
-bool bLoggingInitialised = true;
+inline bool bLoggingInitialised = true;
 
 inline void EngineShutdown()
 {

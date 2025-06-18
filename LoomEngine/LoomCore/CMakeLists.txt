@@ -14,12 +14,21 @@ set(LOOM_CORE_HEADERS
 # ----------- Minimum Required ----------- #
 set(LOOM_MINIMUM_SOURCES
         Source/Log/Log.cpp
+        Source/Log/LogStack.cpp
+        Source/Log/Sinks/ILogSink.cpp
+        Source/Log/Sinks/ConsoleSink.cpp
+        Source/Log/Sinks/FileSink.cpp
         Source/Events/Event.cpp
 )
 
 SET(LOOM_MINIMUM_HEADERS
+        Include/Log/LogMessage.h
         Include/Log/LogLevels.h
         Include/Log/Log.h
+        Include/Log/LogStack.h
+        Include/Log/Sinks/ILogSink.h
+        Include/Log/Sinks/ConsoleSink.h
+        Include/Log/Sinks/FileSink.h
         Include/Events/Event.h
 )
 
