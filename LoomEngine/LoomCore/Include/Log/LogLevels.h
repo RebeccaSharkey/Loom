@@ -9,6 +9,7 @@ namespace Loom
     {
         Quiet,
         Debug,
+        Trace,
         Info,
         Notice,
         Warning,
@@ -19,7 +20,7 @@ namespace Loom
 
 // Define what level the engine/project will log to
 #ifndef LOOM_COMPILE_LOG_LEVEL
-#define LOOM_COMPILE_LOG_LEVEL Loom::LogLevel::Debug
+#define LOOM_COMPILE_LOG_LEVEL Loom::LogLevel::Quiet
 #endif
 
     constexpr bool IsLogLevelEnabled(LogLevel level)

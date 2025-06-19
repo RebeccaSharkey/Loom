@@ -38,8 +38,12 @@ namespace Loom
     do{ if constexpr (Loom::IsLogLevelEnabled(level)) \
     Loom::Log::Write(level, tag, __VA_ARGS__);} \
     while(0);
+#define LOOM_LOG_QUIET(tag, ...) \
+    LOOM_LOG(Loom::LogLevel::Quiet, tag, __VA_ARGS__)
 #define LOOM_LOG_DEBUG(tag, ...) \
     LOOM_LOG(Loom::LogLevel::Debug, tag, __VA_ARGS__)
+#define LOOM_LOG_TRACE(tag, ...) \
+    LOOM_LOG(Loom::LogLevel::Trace, tag, __VA_ARGS__)
 #define LOOM_LOG_INFO(tag, ...) \
     LOOM_LOG(Loom::LogLevel::Info, tag, __VA_ARGS__)
 #define LOOM_LOG_NOTICE(tag, ...) \

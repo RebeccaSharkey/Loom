@@ -5,24 +5,26 @@
 
 namespace Loom
 {
-    bool ILogSink::Init(const bool bInitEnabled)
+    bool ILogSink::Init(const bool bInitEnabled, const LogLevel minLogLevel)
     {
         bEnabled = bInitEnabled;
+        MinLogLevel = minLogLevel;
         return true;
     }
 
     void ILogSink::Shutdown()
     {
+        SetEnabled(false);
         LogStack::DetachSink(this);
     }
 
-    const char * ILogSink::GetLogLevelString(LogLevel level) const
+    const char * ILogSink::GetLogLevelString(const LogLevel level) const
     {
         switch (level)
         {
-            //case LogLevel::Trace:     return LOOM_LOG_WHITE;
             case LogLevel::Quiet:       return "QUIET";
             case LogLevel::Debug:       return "DEBUG";
+            case LogLevel::Trace:       return "TRACE";
             case LogLevel::Info:        return "INFO";
             case LogLevel::Notice:      return "NOTICE";
             case LogLevel::Warning:     return "WARNING";

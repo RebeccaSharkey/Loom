@@ -12,7 +12,7 @@ namespace Loom
         public:
             ~ConsoleSink() override;
 
-            bool Init(bool bInitEnabled) override;
+            bool Init(bool bInitEnabled, LogLevel minLogLevel = LogLevel::Quiet) override;
 
             void Log(const LogMessage& message) override;
             void Flush() override;

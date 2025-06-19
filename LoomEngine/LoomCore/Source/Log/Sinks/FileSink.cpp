@@ -38,9 +38,9 @@ namespace Loom
 #endif
     }
 
-    bool FileSink::Init(const bool bInitEnabled)
+    bool FileSink::Init(const bool bInitEnabled, const LogLevel minLogLevel)
     {
-        if (!ILogSink::Init(bInitEnabled))
+        if (!ILogSink::Init(bInitEnabled, minLogLevel))
         {
             return false;
         };
@@ -99,6 +99,11 @@ namespace Loom
 
     void FileSink::Log(const LogMessage &message)
     {
+        if (!IsEnabled() || !AllowedLogLevel(message.LogLevel))
+        {
+            return;
+        }
+
         const size_t index = CurrentIndex.fetch_add(1, std::memory_order_relaxed) % BufferSize;
         LogBuffer[index] = message;
 

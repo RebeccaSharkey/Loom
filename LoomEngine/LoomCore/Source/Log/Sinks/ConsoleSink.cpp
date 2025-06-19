@@ -10,14 +10,14 @@ namespace Loom
         ILogSink::Shutdown();
     }
 
-    bool ConsoleSink::Init(const bool bInitEnabled)
+    bool ConsoleSink::Init(const bool bInitEnabled, const LogLevel minLogLevel)
     {
-        return ILogSink::Init(bInitEnabled);
+        return ILogSink::Init(bInitEnabled, minLogLevel);
     }
 
     void ConsoleSink::Log(const LogMessage &message)
     {
-        if (!IsEnabled())
+        if (!IsEnabled() || !AllowedLogLevel(message.LogLevel))
         {
             return;
         }
@@ -49,13 +49,13 @@ namespace Loom
         std::fflush(stderr);
     }
 
-    const char * ConsoleSink::GetLogLevelColour(LogLevel level) const
+    const char * ConsoleSink::GetLogLevelColour(const LogLevel level) const
     {
         switch (level)
         {
-            //case LogLevel::Trace:       return "\033[37m";
             case LogLevel::Quiet:       return "\033[37m"; // White
             case LogLevel::Debug:       return "\033[37m"; // White
+            case LogLevel::Trace:       return "\033[37m"; // White
             case LogLevel::Info:        return "\033[37m"; // White
             case LogLevel::Notice:      return "\033[36m"; // Cyan
             case LogLevel::Warning:     return "\033[33m"; // Yellow
@@ -63,8 +63,6 @@ namespace Loom
             case LogLevel::Critical:    return "\033[31m"; // Red
             default:                    return "\033[0m";  // Reset
         }
-
-        return ILogSink::GetLogLevelColour(level);
     }
 }
 

@@ -37,7 +37,7 @@ namespace Loom
 
     public:
         // ILogSink
-        bool Init(const bool bInitEnabled) override;
+        bool Init(bool bInitEnabled, LogLevel minLogLevel = LogLevel::Quiet) override;
         void Shutdown() override;
 
         void Log(const LogMessage& message) override;

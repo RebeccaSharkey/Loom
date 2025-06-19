@@ -48,7 +48,7 @@ namespace Loom
         if (m_ConsoleSink->Init(true))
         {
             LogStack::AttachSink(m_ConsoleSink);
-            LOOM_LOG_INFO("Log", "Console Log Sink Initiated");
+            LOOM_LOG_QUIET("Log", "Console Log Sink Initiated");
         }
         else
         {
@@ -57,10 +57,10 @@ namespace Loom
         }
 
         m_FileSink = new FileSink();
-        if (m_FileSink->Init(true))
+        if (m_FileSink->Init(true, LogLevel::Debug))
         {
             LogStack::AttachSink(m_FileSink);
-            LOOM_LOG_INFO("Log", "File Log Sink Initiated");
+            LOOM_LOG_QUIET("Log", "File Log Sink Initiated");
         }
         else
         {
