@@ -27,10 +27,10 @@ namespace Loom
         //Format Timestamp
         char timeBuffer[32];
         std::snprintf(timeBuffer, sizeof(timeBuffer), "%llu", static_cast<unsigned long long>(message.Timestamp));
+        const char* level = GetLogLevelString(message.LogLevel);
 
         // Get LogLevel as a string and the output colour attached to that LogLevel
         const char* colour = GetColourCode(message.LogLevel);
-        const char* level = GetLogLevelString(message.LogLevel);
 
         // Format and print full line
         std::printf(

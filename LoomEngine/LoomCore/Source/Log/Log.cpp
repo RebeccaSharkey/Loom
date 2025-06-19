@@ -95,44 +95,65 @@ namespace Loom
     void Log::Write(const LogLevel logLevel, const char *tag, const char *message, ...)
     {
         constexpr size_t TAG_SIZE = 32;
+        constexpr size_t TEMP_BUFFER_SIZE = 2048;
 
-        char tempBuffer[1024];
+        char tempBuffer[TEMP_BUFFER_SIZE];
 
         va_list args;
         va_start(args, message);
-        vsnprintf(tempBuffer, sizeof(tempBuffer), message, args);
+        const int length = vsnprintf(tempBuffer, sizeof(tempBuffer), message, args);
         va_end(args);
 
-        // Tag handling (ensure null-terminated and no overrun)
-        char tagBuf[TAG_SIZE];
-        strncpy(tagBuf, tag, TAG_SIZE);
-        tagBuf[TAG_SIZE-1] = '\0';
-
-        // Split and log in MSG_SIZE-1 chunks, UTF-8 safe (basic version)
-        const char* bufferPointer = tempBuffer;
-        while (*bufferPointer)
+        // If there is no message, return
+        if (length <= 0)
         {
-            constexpr size_t MSG_SIZE = 512;
+            return;
+        }
+
+        // Cap output at TMP_BUFFER_SIZE to avoid buffer overrun
+        const size_t messageLength = static_cast<size_t>(std::min(length, static_cast<int>(TEMP_BUFFER_SIZE - 1)));
+        tempBuffer[messageLength] = '\0';
+
+        // Tag handling (ensure null-terminated and no overrun)
+        char tagBuffer[TAG_SIZE];
+        strncpy(tagBuffer, tag, TAG_SIZE);
+        tagBuffer[TAG_SIZE-1] = '\0';
+
+
+        const char* bufferPointer = tempBuffer;
+        const char* bufferEnd = tempBuffer + messageLength;
+
+        while (bufferPointer < bufferEnd)
+        {
+            constexpr size_t MESSAGE_SIZE = 512;
+
+            size_t bufferRemaining = static_cast<size_t>(bufferEnd - bufferPointer);
+            size_t copyLength = (bufferRemaining < MESSAGE_SIZE - 1) ? bufferRemaining : MESSAGE_SIZE - 1;
+
+            //UTF-8 Safe Truncation
+            const char* split = bufferPointer + copyLength;
+            while (split > bufferPointer && ((*split & 0xC0) == 0x80))
+            {
+                split--;
+            }
+
+            size_t safeLength = static_cast<size_t>(split - bufferPointer);
+            if (safeLength == 0)
+            {
+                safeLength = copyLength;
+            }
 
             LogMessage log{};
             log.LogLevel = logLevel;
             log.Timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::system_clock::now().time_since_epoch()).count();
-            strncpy(log.Tag, tag, sizeof(log.Tag));
-            log.Tag[TAG_SIZE - 1] = '\0';
-
-            // Copy up to MSG_SIZE - 1
-            size_t maxCopy = std::min(strlen(bufferPointer), MSG_SIZE-1);
-            size_t actualCopy = maxCopy;
-            // TODO: UTF-8 safe truncation
-            strncpy(log.Message, bufferPointer, actualCopy);
-            log.Message[actualCopy] = '\0';
+            std::memcpy(log.Tag, tagBuffer, TAG_SIZE);
+            std::memcpy(log.Message, bufferPointer, safeLength);
+            log.Message[safeLength] = '\0';
             log.ThreadID = static_cast<uint32_t>(std::hash<std::thread::id>()(std::this_thread::get_id()));
 
             LogStack::Broadcast(log);
-
-            bufferPointer += actualCopy;
-            if (*bufferPointer == '\0') break;
+            bufferPointer += safeLength;
         }
     }
 
