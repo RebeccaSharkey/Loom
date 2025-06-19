@@ -12,12 +12,30 @@
 #include "Log/Sinks/ConsoleSink.h"
 #include "Log/Sinks/FileSink.h"
 
+#ifdef LOOM_PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
+
 namespace Loom
 {
     static std::atomic<bool> bLogInitialized = false;
 
-    static ConsoleSink ConsoleSink;
-    static FileSink FileSink;
+    ConsoleSink* Log::m_ConsoleSink = nullptr;
+    FileSink* Log::m_FileSink = nullptr;
+
+    void EnableVirtualTerminalMode()
+    {
+#ifdef LOOM_PLATFORM_WINDOWS
+        HANDLE outputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD doubleWordMode = 0;
+        if (outputHandle == INVALID_HANDLE_VALUE || !GetConsoleMode(outputHandle, &doubleWordMode))
+        {
+            return;
+        }
+        doubleWordMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(outputHandle, doubleWordMode);
+#endif
+    }
 
     bool Log::Init()
     {
@@ -26,9 +44,10 @@ namespace Loom
             return true;
         }
 
-        if ( ConsoleSink.Init(true) )
+        m_ConsoleSink = new ConsoleSink();
+        if (m_ConsoleSink->Init(true))
         {
-            LogStack::AttachSink(&ConsoleSink);
+            LogStack::AttachSink(m_ConsoleSink);
             LOOM_LOG_INFO("Log", "Console Log Sink Initiated");
         }
         else
@@ -37,10 +56,10 @@ namespace Loom
             return false;
         }
 
-
-        if ( FileSink.Init(true) )
+        m_FileSink = new FileSink();
+        if (m_FileSink->Init(true))
         {
-            LogStack::AttachSink(&FileSink);
+            LogStack::AttachSink(m_FileSink);
             LOOM_LOG_INFO("Log", "File Log Sink Initiated");
         }
         else
@@ -49,67 +68,71 @@ namespace Loom
             return false;
         }
 
-        LOOM_LOG_INFO("Log", "Loggers initialized successfully.");
+        EnableVirtualTerminalMode();
+
         return true;
     }
 
     void Log::Shutdown()
     {
-        ConsoleSink.Shutdown();
-        LogStack::DetachSink(&ConsoleSink);
+        if (m_ConsoleSink)
+        {
+            LogStack::DetachSink(m_ConsoleSink);
+            m_ConsoleSink->Shutdown();
+            delete m_ConsoleSink;
+            m_ConsoleSink = nullptr;
+        }
 
-        FileSink.Shutdown();
-        LogStack::DetachSink(&FileSink);
+        if (m_FileSink)
+        {
+            LogStack::DetachSink(m_FileSink);
+            m_FileSink->Shutdown();
+            delete m_FileSink;
+            m_FileSink = nullptr;
+        }
     }
 
-    void Log::Write(LogLevel logLevel, const char *tag, const char *message, ...)
+    void Log::Write(const LogLevel logLevel, const char *tag, const char *message, ...)
     {
+        constexpr size_t TAG_SIZE = 32;
+
         char tempBuffer[1024];
 
         va_list args;
         va_start(args, message);
-        int formattedMessage = vsnprintf(tempBuffer, sizeof(tempBuffer), message, args);
+        vsnprintf(tempBuffer, sizeof(tempBuffer), message, args);
         va_end(args);
 
-        if (formattedMessage < 0)
+        // Tag handling (ensure null-terminated and no overrun)
+        char tagBuf[TAG_SIZE];
+        strncpy(tagBuf, tag, TAG_SIZE);
+        tagBuf[TAG_SIZE-1] = '\0';
+
+        // Split and log in MSG_SIZE-1 chunks, UTF-8 safe (basic version)
+        const char* bufferPointer = tempBuffer;
+        while (*bufferPointer)
         {
-            return;
-        }
+            constexpr size_t MSG_SIZE = 512;
 
-        if (formattedMessage < 512)
-        {
-            LogMessage logMessage;
+            LogMessage log{};
+            log.LogLevel = logLevel;
+            log.Timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count();
+            strncpy(log.Tag, tag, sizeof(log.Tag));
+            log.Tag[TAG_SIZE - 1] = '\0';
 
-            logMessage.LogLevel = logLevel;
-            logMessage.Tag = std::string_view(tag);
-            logMessage.Timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch()).count();
+            // Copy up to MSG_SIZE - 1
+            size_t maxCopy = std::min(strlen(bufferPointer), MSG_SIZE-1);
+            size_t actualCopy = maxCopy;
+            // TODO: UTF-8 safe truncation
+            strncpy(log.Message, bufferPointer, actualCopy);
+            log.Message[actualCopy] = '\0';
+            log.ThreadID = static_cast<uint32_t>(std::hash<std::thread::id>()(std::this_thread::get_id()));
 
-            std::strncpy(logMessage.Message, tempBuffer, sizeof(logMessage.Message));
-            logMessage.Message[sizeof(logMessage.Message) - 1] = '\0';
+            LogStack::Broadcast(log);
 
-            LogStack::Broadcast(logMessage);
-        }
-        else
-        {
-            // TODO: UTF-8-safe split. Currently assumes ASCII.
-            int split = 511;
-            while (split > 0 && tempBuffer[split] != ' ')
-            {
-                split--;
-            }
-
-            if (split <= 0)
-            {
-                split = 511;
-            }
-
-            char firstSplit[split];
-            memcpy(firstSplit, tempBuffer, split);
-            firstSplit[split] = '\0';
-
-            Write(logLevel, tag, firstSplit);
-            Write(logLevel, tag, tempBuffer + split + 1);
+            bufferPointer += actualCopy;
+            if (*bufferPointer == '\0') break;
         }
     }
 

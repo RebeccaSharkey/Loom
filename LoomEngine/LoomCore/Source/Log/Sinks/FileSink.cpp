@@ -2,60 +2,34 @@
 
 #include "Log/Sinks/FileSink.h"
 
-#include <atomic>
 #include <chrono>
-#include <condition_variable>
-#include <cstdarg>
-#include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <iostream>
-#include <mutex>
-#include <thread>
 
 #ifdef LOOM_PLATFORM_WINDOWS
 #include <direct.h>
-#include <Windows.h>
 #else
 #include <sys/stat.h>
 #endif
 
 namespace Loom
 {
-    static std::atomic<bool> bLogInitialized = false;
-    static bool bShutdownRequested = false;
-
-    static constexpr size_t MAX_LOG_ENTRIES = 1024;
-    static constexpr size_t FLUSH_THRESHOLD = 32;
     static constexpr uint64_t FLUSH_INTERVAL_MS = 1000;
 
-    static char LogFileName[128] = {};
-
-    static LogMessage LogBuffer[MAX_LOG_ENTRIES];
-    static std::atomic<size_t> CurrentIndex = 0;
-    static std::atomic<size_t> LastFlushedIndex = 0;
-
-    static std::thread FlushThread;
-    static std::atomic<size_t> UnflushedCount = 0;
-    static std::mutex FlushMutex;
-    static std::condition_variable FlushCV;
-
-    void EnableVirtualTerminalMode()
+    FileSink::FileSink(const size_t bufferSize):
+        BufferSize(bufferSize),
+        LogBuffer(std::make_unique<LogMessage[]>(bufferSize))
     {
-#ifdef LOOM_PLATFORM_WINDOWS
-        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD dwMode = 0;
 
-        if (hOut == INVALID_HANDLE_VALUE || !GetConsoleMode(hOut, &dwMode))
-        {
-            return;
-        }
-
-        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        SetConsoleMode(hOut, dwMode);
-#endif
     }
 
-    void CreateLogDirectory()
+    FileSink::~FileSink()
+    {
+        FileSink::Shutdown();
+    }
+
+    static void CreateLogDirectory()
     {
 #ifdef LOOM_PLATFORM_WINDOWS
         _mkdir("Logs");
@@ -64,80 +38,71 @@ namespace Loom
 #endif
     }
 
-    bool FileSink::Init(bool bInitEnabled)
+    bool FileSink::Init(const bool bInitEnabled)
     {
         if (!ILogSink::Init(bInitEnabled))
         {
             return false;
         };
 
-        EnableVirtualTerminalMode();
+        //EnableVirtualTerminalMode();
         CreateLogDirectory();
 
+        // Generate Filename
         const time_t now = time(nullptr);
         const tm* timeInfo = localtime(&now);
         snprintf(LogFileName, sizeof(LogFileName), "Logs/Log--%02d-%02d-%04d--%02d-%02d-%02d.log",
                  timeInfo->tm_mday, timeInfo->tm_mon + 1, timeInfo->tm_year + 1900,
                  timeInfo->tm_hour, timeInfo->tm_min, timeInfo->tm_sec);
 
-        FILE* file = fopen(LogFileName, "w");
-        if (!file)
+        // Try to open/create the file
+        FileHandle = fopen(LogFileName, "a");
+        if (!FileHandle)
         {
-            std::cerr<<"Failed to create Log File."<<std::endl;
+            std::cerr<<"Failed to create Log File: "<< LogFileName << std::endl;
             return false;
         }
-        fclose(file);
 
-        FlushThread = std::thread([this]
-            {
-                while (!bShutdownRequested)
-                {
-                    std::unique_lock lock(FlushMutex);
-                    FlushCV.wait_for(lock, std::chrono::milliseconds(FLUSH_INTERVAL_MS), [this]
-                        {
-                            return bShutdownRequested || UnflushedCount.load() >= FLUSH_THRESHOLD;
-                        });
-
-                    if (UnflushedCount.load() > 0)
-                    {
-                        Flush();
-                        UnflushedCount.store(0);
-                    }
-                }
-            });
+        // Start Flush Thread
+        bShutdownRequested = false;
+        FlushThread = std::thread([this] { FlushLoop();});
 
         return true;
     }
 
     void FileSink::Shutdown()
     {
-        {
-            std::lock_guard lock(FlushMutex);
-            bShutdownRequested = true;
-        }
+        // Request Shutdown
+        bShutdownRequested = true;
 
+        // Notify the flush thread
         FlushCV.notify_one();
         if (FlushThread.joinable())
         {
+            // Wait for the background thread to finish
             FlushThread.join();
         }
 
+        // Force a final flush on the current thread (guaranteed safe now!)
         Flush();
 
+        // Close the open file
+        if (FileHandle)
+        {
+            fclose(FileHandle);
+            FileHandle = nullptr;
+        }
+
+        // Remaining cleanup done for all LogSinks
         ILogSink::Shutdown();
     }
 
     void FileSink::Log(const LogMessage &message)
     {
-        size_t index = CurrentIndex.fetch_add(1, std::memory_order_relaxed) % MAX_LOG_ENTRIES;
-        LogMessage& logMessage = LogBuffer[index];
-        logMessage.LogLevel = message.LogLevel;
-        logMessage.Tag = message.Tag;
-        logMessage.Timestamp = message.Timestamp;
-        logMessage.ThreadID = std::this_thread::get_id();
-        std::strncpy(logMessage.Message, message.Message, sizeof(logMessage.Message));
+        const size_t index = CurrentIndex.fetch_add(1, std::memory_order_relaxed) % BufferSize;
+        LogBuffer[index] = message;
 
-        if (UnflushedCount.fetch_add(1, std::memory_order_relaxed) >= FLUSH_THRESHOLD)
+        if (UnflushedCount.fetch_add(1, std::memory_order_relaxed) >= BufferSize)
         {
             FlushCV.notify_one();
         }
@@ -145,22 +110,45 @@ namespace Loom
 
     void FileSink::Flush()
     {
-        if (LogFileName[0] == '\0')
-        {
-            return;
-        }
+        std::lock_guard lock(FlushMutex);
+        FlushInternal();
+    }
 
-        FILE* file = fopen(LogFileName, "a");
-        if (!file)
+    void FileSink::FlushLoop()
+    {
+        while (!bShutdownRequested)
+        {
+            std::unique_lock lock(FlushMutex);
+            FlushCV.wait_for(lock, std::chrono::milliseconds(FLUSH_INTERVAL_MS), [this]
+                        {
+                            return bShutdownRequested || UnflushedCount.load() >= BufferSize;
+                        });
+
+            if (UnflushedCount.load() > 0)
+            {
+                FlushInternal();
+            }
+        }
+    }
+
+    void FileSink::FlushInternal()
+    {
+        if (!FileHandle)
         {
             return;
         }
 
         const size_t start = LastFlushedIndex.load(std::memory_order_acquire);
         const size_t end = CurrentIndex.load(std::memory_order_acquire);
+
+        if (start == end)
+        {
+            return;
+        }
+
         for (size_t i = start; i < end; ++i)
         {
-            const size_t index = i % MAX_LOG_ENTRIES;
+            const size_t index = i % BufferSize;
             const LogMessage& log = LogBuffer[index];
 
             if (log.Message[0] == '\0')
@@ -170,16 +158,15 @@ namespace Loom
 
             const char* levelStr = GetLogLevelString(log.LogLevel);
 
-            const char* safeTag = log.Tag.data() ? log.Tag.data() : "NULL";
-
-            fprintf(file, "[%013llu][%-8s][%-12s] %s\n",
+            fprintf(FileHandle, "[%013llu][%-8s][%-12s] %s\n",
                     static_cast<unsigned long long>(log.Timestamp),
                     levelStr,
-                    safeTag,
+                    log.Tag,
                     log.Message);
         }
 
+        fflush(FileHandle);
         LastFlushedIndex.store(end, std::memory_order_release);
-        fclose(file);
+        UnflushedCount.store(0, std::memory_order_relaxed);
     }
 }

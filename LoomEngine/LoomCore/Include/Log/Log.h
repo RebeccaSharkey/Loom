@@ -2,22 +2,35 @@
 
 #pragma once
 
+#include <mutex>
+#include <memory>
+#include <thread>
+
 #include "Core/Core.h"
 #include "Log/LogLevels.h"
-
+#include "Sinks/ConsoleSink.h"
+#include "Sinks/ILogSink.h"
 
 namespace Loom
 {
+    class ConsoleSink;
+    class FileSink;
+
     class LOOM_API Log
     {
-        public:
-            static bool Init();
-            static void Shutdown();
-            static void Write(LogLevel logLevel, const char* tag, const char* message, ...) __attribute__((format(printf, 3, 4)));
-            static void Flush();
+    public:
+        static bool Init();
+        static void Shutdown();
+        static void Write(LogLevel logLevel, const char* tag, const char* message, ...) __attribute__((format(printf, 3, 4)));
+        static void Flush();
 
-        private:
-            static void OutputToConsole(LogLevel logLevel, const char* tag, const char* formattedMessage);
+    private:
+        static ConsoleSink* m_ConsoleSink;
+        static FileSink* m_FileSink;
+
+    public:
+        static ConsoleSink* GetConsoleSink() { return m_ConsoleSink;};
+        static FileSink* GetFileSink() { return m_FileSink;};
     };
 }
 

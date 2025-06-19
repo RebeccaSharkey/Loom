@@ -1,9 +1,20 @@
 // Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "Log/Sinks/ConsoleSink.h"
+#include <cstdio>
 
 namespace Loom
 {
+    ConsoleSink::~ConsoleSink()
+    {
+        ILogSink::Shutdown();
+    }
+
+    bool ConsoleSink::Init(const bool bInitEnabled)
+    {
+        return ILogSink::Init(bInitEnabled);
+    }
+
     void ConsoleSink::Log(const LogMessage &message)
     {
         if (!IsEnabled())
@@ -27,7 +38,7 @@ namespace Loom
             colour,
             timeBuffer,
             level,
-            message.Tag.data(),
+            message.Tag,
             message.Message
         );
     }
@@ -43,6 +54,7 @@ namespace Loom
         switch (level)
         {
             //case LogLevel::Trace:       return "\033[37m";
+            case LogLevel::Quiet:       return "\033[37m"; // White
             case LogLevel::Debug:       return "\033[37m"; // White
             case LogLevel::Info:        return "\033[37m"; // White
             case LogLevel::Notice:      return "\033[36m"; // Cyan

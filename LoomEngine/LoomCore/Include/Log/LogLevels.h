@@ -7,12 +7,13 @@ namespace Loom
 {
     enum class LogLevel : uint8_t
     {
-        Debug, // Log only to Console? (Normally only used for testing things...?)
-        Info, // Log to Console and Log File
-        Notice, // Log to Console and Log File
-        Warning, // Log to Console and Log File
-        Error, // Log to Console and Log File
-        Critical, // CRASH - Log to Console and Log
+        Quiet,
+        Debug,
+        Info,
+        Notice,
+        Warning,
+        Error,
+        Critical,
         NONE //Don't log anything
     };
 

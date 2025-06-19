@@ -51,5 +51,5 @@ target_include_directories(LoomCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 target_compile_definitions(LoomCore PRIVATE LOOM_BUILD_DLL)
 
 if (WIN32)
-    target_compile_definitions(LoomCore PRIVATE LOOM_PLATFORM_WINDOWS)
+    target_compile_definitions(LoomCore PUBLIC LOOM_PLATFORM_WINDOWS)
 endif()

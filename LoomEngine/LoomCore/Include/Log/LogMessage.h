@@ -2,22 +2,19 @@
 
 #pragma once
 
-#include <string_view>
-#include <thread>
-
 #include "LogLevels.h"
 
 enum class LogLevel;
 
 namespace Loom
 {
-    struct LOOM_API LogMessage
+    struct alignas(64) LogMessage
     {
         LogLevel LogLevel;
         char Message[512];
-        std::string_view Tag;
+        char Tag[32];
         uint64_t Timestamp;
-        std::thread::id ThreadID;
+        uint32_t ThreadID;
     };
 }
 

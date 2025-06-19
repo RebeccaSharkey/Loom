@@ -10,11 +10,15 @@ namespace Loom
     class LOOM_API ConsoleSink : public ILogSink
     {
         public:
+            ~ConsoleSink() override;
+
+            bool Init(bool bInitEnabled) override;
+
             void Log(const LogMessage& message) override;
             void Flush() override;
 
         private:
-            const char* GetColourCode(LogLevel level) const;
+            [[nodiscard]] const char* GetColourCode(LogLevel level) const;
             std::mutex OutputMutex;
     };
 }

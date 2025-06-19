@@ -13,8 +13,8 @@ namespace Loom
     public:
         virtual ~ILogSink() = default;
 
-        virtual bool Init (bool bInitEnabled) { bEnabled = bInitEnabled; return true; };
-        virtual void Shutdown () {};
+        virtual bool Init (bool bInitEnabled);
+        virtual void Shutdown ();
 
         virtual void Log(const LogMessage& message) = 0;
 
@@ -26,7 +26,7 @@ namespace Loom
     protected:
         bool bEnabled = false;
 
-        const char* GetLogLevelString(LogLevel level) const;
+        [[nodiscard]] const char* GetLogLevelString(LogLevel level) const;
     };
 }
 
