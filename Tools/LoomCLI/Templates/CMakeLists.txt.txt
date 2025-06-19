@@ -9,11 +9,11 @@ set_target_properties(LoomCore PROPERTIES
         IMPORTED_IMPLIB   "{{ENGINE_PATH}}/Build/Lib/libLoomCore.dll.a"
         INTERFACE_INCLUDE_DIRECTORIES "{{ENGINE_PATH}}/LoomEngine/LoomCore/Include"
 )
-target_link_libraries(Stitch PRIVATE LoomCore)
-add_custom_command(TARGET Stitch POST_BUILD
+target_link_libraries({{PROJECT_NAME}} PRIVATE LoomCore)
+add_custom_command(TARGET {{PROJECT_NAME}} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "{{ENGINE_PATH}}/Build/Bin/libLoomCore.dll"
-        "$<TARGET_FILE_DIR:Stitch>"
+        "$<TARGET_FILE_DIR:{{PROJECT_NAME}}>"
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/Build)
