@@ -17,8 +17,8 @@ namespace Loom
             void Log(const LogMessage& message) override;
             void Flush() override;
 
-        private:
-            [[nodiscard]] const char* GetColourCode(LogLevel level) const;
+        protected:
+            [[nodiscard]] const char *GetLogLevelColour(LogLevel level) const override;
             std::mutex OutputMutex;
     };
 }

@@ -30,7 +30,7 @@ namespace Loom
         const char* level = GetLogLevelString(message.LogLevel);
 
         // Get LogLevel as a string and the output colour attached to that LogLevel
-        const char* colour = GetColourCode(message.LogLevel);
+        const char* colour = GetLogLevelColour(message.LogLevel);
 
         // Format and print full line
         std::printf(
@@ -49,7 +49,7 @@ namespace Loom
         std::fflush(stderr);
     }
 
-    const char * ConsoleSink::GetColourCode(LogLevel level) const
+    const char * ConsoleSink::GetLogLevelColour(LogLevel level) const
     {
         switch (level)
         {
@@ -63,6 +63,8 @@ namespace Loom
             case LogLevel::Critical:    return "\033[31m"; // Red
             default:                    return "\033[0m";  // Reset
         }
+
+        return ILogSink::GetLogLevelColour(level);
     }
 }
 

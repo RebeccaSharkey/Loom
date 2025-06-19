@@ -26,7 +26,11 @@ namespace Loom
     protected:
         bool bEnabled = false;
 
-        [[nodiscard]] const char* GetLogLevelString(LogLevel level) const;
+
+
+    protected:
+        [[nodiscard]] virtual const char* GetLogLevelString(LogLevel level) const;
+        [[nodiscard]] virtual const char* GetLogLevelColour(LogLevel level) const { return ""; };
     };
 }
 
