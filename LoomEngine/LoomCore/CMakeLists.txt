@@ -10,6 +10,7 @@ set(LOOM_CORE_HEADERS
         Include/Core/Core.h
         Include/Core/Application.h
         Include/Core/Assert.h
+        Include/Core/Types.h
 )
 
 # ----------- Log Module ----------- #

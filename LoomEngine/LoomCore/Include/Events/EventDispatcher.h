@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Core/Types.h"
 #include "IEvent.h"
 #include "EventHandle.h"
 #include <functional>

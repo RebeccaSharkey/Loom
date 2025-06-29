@@ -73,9 +73,3 @@
 // Bit macros
 //====================
 #define BIT(x) (1u << (x))
-
-
-namespace Loom
-{
-    using OwnerID = uintptr_t;
-}
