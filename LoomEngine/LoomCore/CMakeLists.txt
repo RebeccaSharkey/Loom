@@ -73,7 +73,6 @@ add_library(LoomCore SHARED ${LOOM_ENGINE_SOURCES})
 # Public headers exposed to other projects
 target_include_directories(LoomCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 
-# Public definitions exposed to other projects
+# Private Definitions for this project
 target_compile_definitions(LoomCore PRIVATE LOOM_BUILD_DLL)
-
 target_compile_definitions(LoomCore PRIVATE $<$<CONFIG:Debug>:LOOM_DEBUG>)

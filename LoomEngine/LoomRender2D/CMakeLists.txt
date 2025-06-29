@@ -21,4 +21,8 @@ target_include_directories(LoomRender2D
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../LoomCore/Include
 )
 
+
 target_compile_definitions(LoomRender2D PUBLIC ENABLE_LoomRender2D)
+
+# Private Definitions for this project
+target_compile_definitions(LoomRender2D PRIVATE LOOM_BUILD_DLL)
