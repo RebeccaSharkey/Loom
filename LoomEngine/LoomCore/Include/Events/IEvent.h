@@ -14,7 +14,7 @@ namespace Loom
         virtual ~IEvent() = default;
 
         virtual EventID GetEventTypeID() const = 0;
-        virtual const char* GetEventName() const { return "Unnamed Event";};
+        virtual const char* GetEventName() const = 0;
 
         // Serialising fields
         virtual std::vector<std::string> GetFieldNames() const { return {}; }

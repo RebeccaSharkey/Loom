@@ -70,6 +70,17 @@
 #endif
 
 //====================
+// Type Sting
+//====================
+#if LOOM_COMPILER_MSVC
+    #define LOOM_TYPE_STRING __FUNCSIG__
+#elif LOOM_COMPILER_CLANG || LOOM_COMPILER_GCC
+    #define LOOM_TYPE_STRING __PRETTY_FUNCTION__
+#else
+    #error Unsupported compiler for LOOM_TYPE_STRING
+#endif
+
+//====================
 // Bit macros
 //====================
 #define BIT(x) (1u << (x))

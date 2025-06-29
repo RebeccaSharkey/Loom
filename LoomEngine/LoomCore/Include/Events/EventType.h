@@ -6,16 +6,23 @@
 
 namespace Loom
 {
-    using EventID = uint32_t;
+    using EventID = uint64_t;
+
+    constexpr EventID ConstHash(const char* string)
+    {
+        EventID hash = 14695981039346656037ull;
+        while (*string)
+            hash = (hash ^ static_cast<uint8_t>(*string++)) * 1099511628211ull;
+        return hash;
+    }
 
     // Template to generate unique EventID per type
     template<typename T>
     struct EventType
     {
-        static EventID ID()
+        static constexpr EventID ID()
         {
-            static const EventID ID = Counter++;
-            return ID;
+            return ConstHash(LOOM_TYPE_STRING);
         }
 
     private:
