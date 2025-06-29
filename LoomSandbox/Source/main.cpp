@@ -5,8 +5,9 @@
 class LoomSandbox : public Loom::Application
 {
 public:
+    using Application::Application;
     LoomSandbox() {};
-    ~LoomSandbox() {};
+    ~LoomSandbox() override = default;
 };
 
 Loom::Application* Loom::CreateApplication()

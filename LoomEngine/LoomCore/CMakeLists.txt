@@ -33,11 +33,15 @@ set(LOOM_LOG_HEADERS
 
 # ----------- Event Module ----------- #
 set(LOOM_EVENT_SOURCES
-
+        Source/Events/EventDispatcher.cpp
 )
 
 set(LOOM_EVENT_HEADERS
-
+        Include/Events/IEvent.h
+        Include/Events/EventType.h
+        Include/Events/EventDispatcher.h
+        Include/Events/EventHandle.h
+        Include/Events/EventMacro.h
 )
 
 # ----------- Minimum Required ----------- #
@@ -60,7 +64,6 @@ set(LOOM_ENGINE_SOURCES
         ${LOOM_EVENT_HEADERS}
         ${LOOM_MINIMUM_SOURCES}
         ${LOOM_MINIMUM_HEADERS}
-        Source/Core/Assert.cpp
 )
 
 # ----------- Create Shared Library ----------- #

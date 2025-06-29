@@ -3,11 +3,10 @@
 #pragma once
 
 #include "Core/Application.h"
-
-#ifdef LOOM_PLATFORM_WINDOWS
-
+#include "Events/EventDispatcher.h"
 #include "Log/Log.h"
 
+#ifdef LOOM_PLATFORM_WINDOWS
 #include <iostream>
 #include <ostream>
 #include <Windows.h>
@@ -21,9 +20,10 @@ inline void EngineShutdown()
     if (bLoggingInitialised)
     {
         LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
+        Loom::Log::Shutdown();
     }
 
-    Loom::Log::Shutdown();
+    Loom::EventDispatcher::UnsubscribeAll();
 }
 
 inline LONG WINAPI LoomCrashHandler(EXCEPTION_POINTERS* ExceptionInfo) {
