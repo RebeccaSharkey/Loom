@@ -45,6 +45,26 @@ Loom isn’t just another engine — it's a performance-first, developer-respect
 
 ---
 
+## Installation & Getting Started
+
+### Prerequisites
+
+- **CMake** (3.20 or higher recommended)
+- **Python** (required for module modifications and building)
+- **Vulkan SDK** (for rendering)
+
+### Creating a Project
+
+To create a new Loom project, run:
+
+```bash
+CreateGame.bat
+```
+
+This will set up a new project with the necessary structure and build configuration.
+
+---
+
 ## Platforms
 
 - Windows (Current)
