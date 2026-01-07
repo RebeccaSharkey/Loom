@@ -6,6 +6,7 @@
 #include "IEvent.h"
 #include "EventHandle.h"
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
@@ -15,6 +16,22 @@ namespace Loom
 {
     using EventCallbackFn = std::function<void(const void*)>;
     using ListenerID = size_t;
+
+    // Type-erased event storage for queued events
+    struct QueuedEvent
+    {
+        EventID ID;
+        std::shared_ptr<void> Data;  // Prevents dangling pointer
+        
+        template<typename EventT>
+        static QueuedEvent Create(const EventT& event)
+        {
+            return QueuedEvent{
+                EventType<EventT>::ID(),
+                std::make_shared<EventT>(event)  // Copies the event
+            };
+        }
+    };
 
     class LOOM_API EventDispatcher
     {
@@ -31,7 +48,9 @@ namespace Loom
         template<typename EventT>
         static void Broadcast(const EventT& event);
 
-        static void Enqueue(EventID eventID, const void* data);
+        template<typename EventT>
+        static void Enqueue(const EventT& event);
+        
         static void Flush();
 
         // Debug hooks
@@ -54,7 +73,7 @@ namespace Loom
         static std::unordered_map<EventID, ListenerGroup>& GetListenerMap();
         static std::shared_mutex& GetListenerMutex();
 
-        static std::vector<std::pair<EventID, const void*>>& GetQueue();
+        static std::vector<QueuedEvent>& GetQueue();
         static std::mutex& GetQueueMutex();
 
         static void InternalBroadcast(EventID id, const void* data);
@@ -94,6 +113,16 @@ namespace Loom
         InternalBroadcast(EventType<EventT>::ID(), &event);
     }
 
+    template<typename EventT>
+    void EventDispatcher::Enqueue(const EventT& event)
+    {
+        static_assert(std::is_base_of_v<IEvent, EventT>, "EventT must derive from IEvent");
+        static_assert(std::is_copy_constructible_v<EventT>, "EventT must be copyable to enqueue");
+        
+        std::lock_guard lock(GetQueueMutex());
+        GetQueue().push_back(QueuedEvent::Create(event));
+    }
+    
     inline void ScopedEventHandle::Unsubscribe()
     {
         if (Handle.IsValid())

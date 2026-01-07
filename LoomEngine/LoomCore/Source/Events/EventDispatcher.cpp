@@ -6,7 +6,7 @@ namespace Loom
 {
     static std::unordered_map<EventID, EventDispatcher::ListenerGroup> s_EventListeners;
     static std::shared_mutex s_ListenerMutex;
-    static std::vector<std::pair<EventID, const void*>> s_QueuedEvents;
+    static std::vector<QueuedEvent> s_QueuedEvents;
     static std::mutex s_QueueMutex;
 
     std::unordered_map<EventID, EventDispatcher::ListenerGroup>& EventDispatcher::GetListenerMap()
@@ -19,7 +19,7 @@ namespace Loom
         return s_ListenerMutex;
     }
 
-    std::vector<std::pair<EventID, const void*>>& EventDispatcher::GetQueue()
+    std::vector<QueuedEvent>& EventDispatcher::GetQueue()
     {
         return s_QueuedEvents;
     }
@@ -76,22 +76,16 @@ namespace Loom
         }
     }
 
-    void EventDispatcher::Enqueue(EventID eventID, const void* data)
-    {
-        std::lock_guard lock(s_QueueMutex);
-        s_QueuedEvents.emplace_back(eventID, data);
-    }
-
     void EventDispatcher::Flush()
     {
-        std::vector<std::pair<EventID, const void*>> queue;
+        std::vector<QueuedEvent> queue;
         {
             std::lock_guard lock(s_QueueMutex);
             std::swap(queue, s_QueuedEvents);
         }
 
-        for (const auto& [id, data] : queue)
-            InternalBroadcast(id, data);
+        for (const auto& event : queue)
+            InternalBroadcast(event.ID, event.Data.get());
     }
 
     size_t EventDispatcher::GetListenerCount(EventID id)
