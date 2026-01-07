@@ -15,7 +15,7 @@ namespace Loom
             : EventID(eventID), ListenerID(listenerID) {};
 
 
-        bool IsValid() const { return EventID != 0xFFFFFFFF;};
+        bool IsValid() const { return EventID != InvalidID;};
         void Invalidate() { EventID = InvalidID; };
 
         EventID GetEventID() const { return EventID; };
@@ -23,7 +23,7 @@ namespace Loom
 
 
     private:
-        static constexpr EventID InvalidID = 0xFFFFFFFF;
+        static constexpr EventID InvalidID = ~static_cast<EventID>(0);
 
         EventID EventID = InvalidID;
         size_t ListenerID = 0;

@@ -24,8 +24,5 @@ namespace Loom
         {
             return ConstHash(LOOM_TYPE_STRING);
         }
-
-    private:
-        static inline EventID Counter = 0;
     };
 }

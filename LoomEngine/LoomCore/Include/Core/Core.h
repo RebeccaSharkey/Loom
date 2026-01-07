@@ -70,7 +70,7 @@
 #endif
 
 //====================
-// Type Sting
+// Type String
 //====================
 #if LOOM_COMPILER_MSVC
     #define LOOM_TYPE_STRING __FUNCSIG__

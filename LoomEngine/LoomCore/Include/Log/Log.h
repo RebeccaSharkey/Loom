@@ -21,7 +21,11 @@ namespace Loom
     public:
         static bool Init();
         static void Shutdown();
+#if defined(__GNUC__) || defined(__clang__)
         static void Write(LogLevel logLevel, const char* tag, const char* message, ...) __attribute__((format(printf, 3, 4)));
+#else
+        static void Write(LogLevel logLevel, const char* tag, const char* message, ...);
+#endif
         static void Flush();
 
     private:

@@ -3,6 +3,7 @@
 
 #include "Core/Core.h"
 #include "Log/Log.h"
+#include <csignal>
 #include <sstream>
 
 namespace Loom
