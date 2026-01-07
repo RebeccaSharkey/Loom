@@ -9,7 +9,7 @@ namespace Loom
 {
     class LOOM_API Application
     {
-        OwnerID EventSystemID = reinterpret_cast<OwnerID>(this);
+        OwnerID EventSystemID = GenerateOwnerID();
         public:
             Application();
             virtual ~Application();
