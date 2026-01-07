@@ -92,6 +92,11 @@ namespace Loom
 
     void Log::Write(const LogLevel logLevel, const char *tag, const char *message, ...)
     {
+        if (!tag || !message)
+        {
+            return;
+        }
+
         constexpr size_t TAG_SIZE = 32;
         constexpr size_t TEMP_BUFFER_SIZE = 2048;
 
