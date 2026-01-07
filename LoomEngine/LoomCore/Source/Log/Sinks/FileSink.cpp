@@ -104,6 +104,14 @@ namespace Loom
             return;
         }
 
+        // Drop if the buffer is full (loss mode)
+        if (UnflushedCount.load(std::memory_order_acquire) >= BufferSize)
+        {
+            DroppedCount.fetch_add(1, std::memory_order_relaxed);
+            FlushCV.notify_one();
+            return;
+        }
+
         const size_t index = CurrentIndex.fetch_add(1, std::memory_order_relaxed) % BufferSize;
         LogBuffer[index] = message;
 
@@ -173,5 +181,17 @@ namespace Loom
         fflush(FileHandle);
         LastFlushedIndex.store(end, std::memory_order_release);
         UnflushedCount.store(0, std::memory_order_relaxed);
+
+        const size_t dropped = DroppedCount.exchange(0, std::memory_order_relaxed);
+        if (dropped > 0)
+        {
+            fprintf(FileHandle, "[%013llu][%-8s][%-12s] Dropped %zu log messages due to buffer overflow\n",
+                    static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()).count()),
+                     GetLogLevelString(LogLevel::Warning),
+                    "FileSink",
+                    dropped);
+            fflush(FileHandle);
+        }
     }
 }
