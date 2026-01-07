@@ -41,6 +41,8 @@ namespace Loom
             message.Tag,
             message.Message
         );
+
+        Flush();
     }
 
     void ConsoleSink::Flush()

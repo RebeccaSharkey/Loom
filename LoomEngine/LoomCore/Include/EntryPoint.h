@@ -20,6 +20,7 @@ inline void EngineShutdown()
     if (bLoggingInitialised)
     {
         LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
+        Loom::Log::Flush();
         Loom::Log::Shutdown();
     }
 
