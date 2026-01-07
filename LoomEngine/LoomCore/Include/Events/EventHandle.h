@@ -29,7 +29,7 @@ namespace Loom
         size_t ListenerID = 0;
     };
 
-    class ScopedEventHandle
+    class LOOM_API ScopedEventHandle
     {
         public:
         ScopedEventHandle() = default;

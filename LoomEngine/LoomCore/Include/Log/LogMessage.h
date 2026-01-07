@@ -4,8 +4,6 @@
 
 #include "LogLevels.h"
 
-enum class LogLevel;
-
 namespace Loom
 {
     struct alignas(64) LogMessage

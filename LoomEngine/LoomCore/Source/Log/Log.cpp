@@ -77,7 +77,6 @@ namespace Loom
     {
         if (m_ConsoleSink)
         {
-            LogStack::DetachSink(m_ConsoleSink);
             m_ConsoleSink->Shutdown();
             delete m_ConsoleSink;
             m_ConsoleSink = nullptr;
@@ -85,7 +84,6 @@ namespace Loom
 
         if (m_FileSink)
         {
-            LogStack::DetachSink(m_FileSink);
             m_FileSink->Shutdown();
             delete m_FileSink;
             m_FileSink = nullptr;
