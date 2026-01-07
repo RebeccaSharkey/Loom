@@ -104,9 +104,11 @@ namespace Loom
             return;
         }
 
-        // Drop if the buffer is full (loss mode)
-        if (UnflushedCount.load(std::memory_order_acquire) >= BufferSize)
+        size_t previousCount = UnflushedCount.fetch_add(1, std::memory_order_acq_rel);
+
+        if (previousCount >= BufferSize)
         {
+            UnflushedCount.fetch_sub(1, std::memory_order_relaxed);
             DroppedCount.fetch_add(1, std::memory_order_relaxed);
             FlushCV.notify_one();
             return;
@@ -115,7 +117,7 @@ namespace Loom
         const size_t index = CurrentIndex.fetch_add(1, std::memory_order_relaxed) % BufferSize;
         LogBuffer[index] = message;
 
-        if (UnflushedCount.fetch_add(1, std::memory_order_relaxed) >= BufferSize)
+        if (previousCount + 1 >= BufferSize / 2)
         {
             FlushCV.notify_one();
         }
