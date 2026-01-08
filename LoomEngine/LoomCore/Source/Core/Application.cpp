@@ -2,25 +2,57 @@
 
 #include "Core/Application.h"
 
+#include "Core/Assert.h"
 #include "Events/EventDispatcher.h"
-#include "Events/EventHandle.h"
 
 namespace Loom
 {
-    Application::Application() = default;
-    Application::~Application() = default;
+    Application* Application::Instance = nullptr;
+
+    Application::Application()
+    {
+        LOOM_LOG_NOTICE("Loom", "Starting Loom Engine...");
+
+        LOOM_ASSERT(!Instance, "Application already exists");
+        Instance = this;
+
+        // TODO: Set Working Directory Here
+
+        // TODO: Create Window
+
+        // TODO: Initialise Application Events
+
+        // TODO: Initialise Renderer Here
+    }
+
+    Application::~Application()
+    {
+        // TODO: Shutdown Renderer
+
+        EventDispatcher::UnsubscribeAll();
+
+        LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
+        Log::Flush();
+        Log::Shutdown();
+    }
 
     void Application::Run()
     {
-        ScopedEventHandle applicationStartedEvent = EventDispatcher::SubscribeScoped<ApplicationStartedEvent>(
-            [this](const ApplicationStartedEvent& event) {
-                OnApplicationStarted(event);
-            },
-            EventSystemID);
+        while (bIsRunning)
+        {
+            // TODO: Engine Tick
 
-        EventDispatcher::Broadcast(ApplicationStartedEvent{});
+            // TODO: Main Thread
 
-        while (true);
+            // TODO: Render
+
+            // TODO: Update Window
+        }
+    }
+
+    void Application::Close()
+    {
+        bIsRunning = false;
     }
 }
 

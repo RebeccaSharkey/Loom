@@ -7,23 +7,30 @@
 #include "Events/EventMacro.h"
 #include "Log/Log.h"
 
+int main(int argc, char** argv);
+
 namespace Loom
 {
     LOOM_EVENT(ApplicationStartedEvent)
 
     class LOOM_API Application
     {
+        friend int ::main(int argc, char** argv);
+        static Application* Instance;
         OwnerID EventSystemID = GenerateOwnerID();
-        public:
-            Application();
-            virtual ~Application();
 
-            void OnApplicationStarted(const ApplicationStartedEvent& event)
-            {
-                LOOM_LOG_NOTICE("Application", "Application started successfully.")
-            }
+    public:
+        Application();
+        virtual ~Application();
 
-            void Run();
+    private:
+        void Run();
+
+    public:
+        void Close();
+
+    private:
+        bool bIsRunning = true;
    };
 
     // To be defined in the client (Editor, Game, App...)
