@@ -2,10 +2,8 @@
 
 #pragma once
 
-#include "Core.h"
-#include "Types.h"
+#include "LoomEngine.h"
 #include "Events/EventMacro.h"
-#include "Log/Log.h"
 
 int main(int argc, char** argv);
 

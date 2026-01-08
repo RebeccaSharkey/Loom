@@ -1,8 +1,6 @@
 // © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "Core/Application.h"
-
-#include "Core/Assert.h"
 #include "Events/EventDispatcher.h"
 
 namespace Loom

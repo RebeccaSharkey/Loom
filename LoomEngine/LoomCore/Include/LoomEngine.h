@@ -2,5 +2,11 @@
 
 #pragma once
 
+#include "Core/Assert.h"
 #include "Core/Core.h"
+#include "Core/Types.h"
+
+#include "Events/EventType.h"
+#include "Events/EventMacro.h"
+
 #include "Log/Log.h"

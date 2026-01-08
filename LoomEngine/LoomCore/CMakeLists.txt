@@ -51,6 +51,7 @@ set(LOOM_MINIMUM_SOURCES
 )
 
 SET(LOOM_MINIMUM_HEADERS
+        Include/LoomEngine.h
         Include/EntryPoint.h
 )
 

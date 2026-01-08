@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Core/Application.h"
-#include "Log/Log.h"
+#include "LoomEngine.h"
 
 #ifdef LOOM_PLATFORM_WINDOWS
 #include <Windows.h>
@@ -22,8 +22,6 @@ int main(int argc, char* argv[])
     app->Run();
 
     delete app;
-
-    //return 0;
 }
 
 #endif

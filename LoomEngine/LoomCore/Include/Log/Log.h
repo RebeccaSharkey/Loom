@@ -2,14 +2,9 @@
 
 #pragma once
 
-#include <mutex>
-#include <memory>
-#include <thread>
-
 #include "Core/Core.h"
 #include "Log/LogLevels.h"
-#include "Sinks/ConsoleSink.h"
-#include "Sinks/ILogSink.h"
+#include <memory>
 
 namespace Loom
 {
