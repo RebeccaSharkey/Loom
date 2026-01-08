@@ -44,6 +44,7 @@ namespace Loom
 #define LOOM_DEBUG_BREAK() std::raise(SIGTRAP)
 #endif
 
+// TODO: Use HandleAssertFailure function here
 // Always-on verification
 #define LOOM_VERIFY(expr, ...) \
     do { \
