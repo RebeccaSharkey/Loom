@@ -45,6 +45,17 @@ set(LOOM_EVENT_HEADERS
         Include/Events/EventMacro.h
 )
 
+# ----------- Window Module ----------- #
+set(LOOM_WINDOW_SOURCES
+        Source/Window/PlatformCreation/WindowsWindow.cpp
+)
+
+set(LOOM_WINDOW_HEADERS
+        Include/Window/Events/WindowEvents.h
+        Include/Window/PlatformCreation/WindowsWindow.h
+        Include/Window/Window.h
+)
+
 # ----------- Minimum Required ----------- #
 set(LOOM_MINIMUM_SOURCES
 
@@ -64,6 +75,8 @@ set(LOOM_ENGINE_SOURCES
         ${LOOM_LOG_HEADERS}
         ${LOOM_EVENT_SOURCES}
         ${LOOM_EVENT_HEADERS}
+        ${LOOM_WINDOW_SOURCES}
+        ${LOOM_WINDOW_HEADERS}
         ${LOOM_MINIMUM_SOURCES}
         ${LOOM_MINIMUM_HEADERS}
 )

@@ -2,6 +2,8 @@
 
 #include "Core/Application.h"
 #include "Events/EventDispatcher.h"
+#include "Window/Window.h"
+#include "Window/Events/WindowEvents.h"
 
 namespace Loom
 {
@@ -16,7 +18,21 @@ namespace Loom
 
         // TODO: Set Working Directory Here
 
-        // TODO: Create Window
+        WindowSpecification windowSpec;
+        windowSpec.Title = "Loom Engine";
+        windowSpec.Width = 1280;
+        windowSpec.Height = 720;
+        windowSpec.VSync = true;
+
+        m_Window.reset(Window::Create(windowSpec));
+        LOOM_ASSERT(m_Window, "Failed to create window");
+
+        // Subscribe to window close event
+        EventDispatcher::Subscribe<WindowCloseEvent>([this](const WindowCloseEvent&)
+        {
+            LOOM_LOG_INFO("Application", "Window close requested");
+            Close();
+        }, EventSystemID);
 
         // TODO: Initialise Application Events
 
@@ -27,6 +43,8 @@ namespace Loom
     {
         // TODO: Shutdown Renderer
 
+        m_Window.reset();
+
         EventDispatcher::UnsubscribeAll();
 
         LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
@@ -36,15 +54,15 @@ namespace Loom
 
     void Application::Run()
     {
-        while (bIsRunning)
+        while (bIsRunning && !m_Window->ShouldClose())
         {
+            m_Window->ProcessEvents();
+
             // TODO: Engine Tick
 
             // TODO: Main Thread
 
             // TODO: Render
-
-            // TODO: Update Window
         }
     }
 

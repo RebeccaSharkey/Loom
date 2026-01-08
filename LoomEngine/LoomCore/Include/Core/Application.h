@@ -4,12 +4,13 @@
 
 #include "LoomEngine.h"
 #include "Events/EventMacro.h"
+#include <memory>
 
 int main(int argc, char** argv);
 
 namespace Loom
 {
-    LOOM_EVENT(ApplicationStartedEvent)
+    class Window;
 
     class LOOM_API Application
     {
@@ -26,9 +27,11 @@ namespace Loom
 
     public:
         void Close();
+        Window* GetWindow() const { return m_Window.get(); }
 
     private:
         bool bIsRunning = true;
+        std::unique_ptr<Window> m_Window;
    };
 
     // To be defined in the client (Editor, Game, App...)
