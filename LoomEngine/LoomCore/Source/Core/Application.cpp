@@ -16,7 +16,7 @@ namespace Loom
             [this](const ApplicationStartedEvent& event) {
                 OnApplicationStarted(event);
             },
-            reinterpret_cast<OwnerID>(this));
+            EventSystemID);
 
         EventDispatcher::Broadcast(ApplicationStartedEvent{});
 
