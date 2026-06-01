@@ -4,7 +4,6 @@
 
 #include "LoomEngine.h"
 #include "Events/EventMacro.h"
-#include <memory>
 
 int main(int argc, char** argv);
 
@@ -22,16 +21,15 @@ namespace Loom
         Application();
         virtual ~Application();
 
+        virtual void OnStart() {}
+        virtual void OnUpdate() {}
+        virtual void OnShutdown() {}
+
+        void Close();
+
     private:
         void Run();
-
-    public:
-        void Close();
-        Window* GetWindow() const { return m_Window.get(); }
-
-    private:
         bool bIsRunning = true;
-        std::unique_ptr<Window> m_Window;
    };
 
     // To be defined in the client (Editor, Game, App...)
