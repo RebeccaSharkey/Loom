@@ -4,6 +4,7 @@ project(LoomCore LANGUAGES CXX)
 set(LOOM_CORE_SOURCES
         Source/Core/Application.cpp
         Source/Core/Assert.cpp
+        Source/Core/Time.cpp
 )
 
 set(LOOM_CORE_HEADERS
@@ -11,6 +12,7 @@ set(LOOM_CORE_HEADERS
         Include/Core/Application.h
         Include/Core/Assert.h
         Include/Core/Types.h
+        Include/Core/Time.h
 )
 
 # ----------- Log Module ----------- #

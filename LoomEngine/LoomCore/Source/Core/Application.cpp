@@ -1,6 +1,8 @@
 // © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "Core/Application.h"
+
+#include "Core/Time.h"
 #include "Events/EventDispatcher.h"
 
 namespace Loom
@@ -26,20 +28,21 @@ namespace Loom
 
     void Application::Run()
     {
+        auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
         OnStart();
 
         while (bIsRunning)
         {
-            OnUpdate();
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            double deltaTime = std::chrono::duration<double>(currentTime - lastFrameTime).count();
+            lastFrameTime = currentTime;
+
+            Time::UpdateTime(deltaTime);
+
+            OnUpdate(static_cast<float>(deltaTime));
 
             EventDispatcher::Flush();
-
-            // TODO: Engine Tick
-
-            // TODO: Main Thread
-
-            // TODO: Render
         }
 
         OnShutdown();

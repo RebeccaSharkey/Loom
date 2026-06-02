@@ -22,7 +22,7 @@ namespace Loom
         virtual ~Application();
 
         virtual void OnStart() {}
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(float DeltaTime) {}
         virtual void OnShutdown() {}
 
         void Close();

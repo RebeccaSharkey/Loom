@@ -5,6 +5,7 @@
 #include "Core/Assert.h"
 #include "Core/Core.h"
 #include "Core/Types.h"
+#include "Core/Time.h"
 
 #include "Events/EventType.h"
 #include "Events/EventMacro.h"
