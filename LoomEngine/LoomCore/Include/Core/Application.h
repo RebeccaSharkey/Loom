@@ -4,12 +4,24 @@
 
 #include "LoomEngine.h"
 #include "Events/EventMacro.h"
+#include "Window/Window.h"
 
 int main(int argc, char** argv);
 
 namespace Loom
 {
     class Window;
+
+    struct ApplicationSpecification
+    {
+        std::string Name = "Loom Application";
+        WindowSpecification WindowSpec;
+
+        ApplicationSpecification(const std::string& name = "Loom Application", const WindowSpecification& windowSpec = WindowSpecification())
+            : Name(name), WindowSpec(windowSpec)
+        {
+        }
+    };
 
     class LOOM_API Application
     {
@@ -18,18 +30,21 @@ namespace Loom
         OwnerID EventSystemID = GenerateOwnerID();
 
     public:
-        Application();
+        explicit Application(const ApplicationSpecification& spec = ApplicationSpecification());
         virtual ~Application();
 
         virtual void OnStart() {}
-        virtual void OnUpdate(float DeltaTime) {}
+        virtual void OnUpdate(const float DeltaTime) {}
         virtual void OnShutdown() {}
 
         void Close();
 
     private:
         void Run();
+
         bool bIsRunning = true;
+        ApplicationSpecification m_Specification;
+        std::unique_ptr<Window> m_Window;
    };
 
     // To be defined in the client (Editor, Game, App...)

@@ -47,6 +47,36 @@ set(LOOM_EVENT_HEADERS
         Include/Events/EventMacro.h
 )
 
+# ----------- Window Module ----------- #
+set(LOOM_WINDOW_SOURCES
+)
+
+set(LOOM_WINDOW_HEADERS
+        Include/Window/Window.h
+)
+
+# ----------- Platform Module ----------- #
+set(LOOM_PLATFORM_SOURCES)
+
+if(WIN32)
+    list(APPEND LOOM_PLATFORM_SOURCES
+            Source/Platform/Windows/WindowsWindow.h
+            Source/Platform/Windows/WindowsWindow.cpp
+    )
+
+elseif(APPLE)
+    list(APPEND LOOM_PLATFORM_SOURCES
+            Source/Platform/MacOS/MacOSWindow.h
+            Source/Platform/MacOS/MacOSWindow.cpp
+    )
+
+elseif(UNIX)
+    list(APPEND LOOM_PLATFORM_SOURCES
+            Source/Platform/Linux/LinuxWindow.h
+            Source/Platform/Linux/LinuxWindow.cpp
+    )
+endif()
+
 # ----------- Minimum Required ----------- #
 set(LOOM_MINIMUM_SOURCES
 
@@ -66,6 +96,9 @@ set(LOOM_ENGINE_SOURCES
         ${LOOM_LOG_HEADERS}
         ${LOOM_EVENT_SOURCES}
         ${LOOM_EVENT_HEADERS}
+        ${LOOM_WINDOW_SOURCES}
+        ${LOOM_WINDOW_HEADERS}
+        ${LOOM_PLATFORM_SOURCES}
         ${LOOM_MINIMUM_SOURCES}
         ${LOOM_MINIMUM_HEADERS}
 )
@@ -79,3 +112,11 @@ target_include_directories(LoomCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 # Private Definitions for this project
 target_compile_definitions(LoomCore PRIVATE LOOM_BUILD_DLL)
 target_compile_definitions(LoomCore PRIVATE $<$<CONFIG:Debug>:LOOM_DEBUG>)
+
+if(WIN32)
+    target_compile_definitions(LoomCore PRIVATE LOOM_PLATFORM_WINDOWS)
+elseif(APPLE)
+    target_compile_definitions(LoomCore PRIVATE LOOM_PLATFORM_MACOS)
+elseif(UNIX)
+    target_compile_definitions(LoomCore PRIVATE LOOM_PLATFORM_LINUX)
+endif()
