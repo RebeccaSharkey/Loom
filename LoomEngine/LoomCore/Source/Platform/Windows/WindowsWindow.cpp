@@ -7,6 +7,9 @@
 #include "LoomEngine.h"
 #include <windows.h>
 
+#include "../../../Include/Events/Events/WindowsEvents.h"
+#include "Events/EventDispatcher.h"
+
 namespace Loom {
     Window *Window::Create(const WindowSpecification &spec)
     {
@@ -116,7 +119,8 @@ namespace Loom {
         {
             case WM_CLOSE:
             {
-                m_ShouldClose = true;
+                WindowCloseEvent event;
+                EventDispatcher::Enqueue<WindowCloseEvent>(event);
                 return 0;
             }
 
@@ -130,12 +134,28 @@ namespace Loom {
             {
                 m_Width = LOWORD(lParam);
                 m_Height = HIWORD(lParam);
+                WindowResizeEvent event(m_Width, m_Height);
+                EventDispatcher::Enqueue<WindowResizeEvent>(event);
+                return 0;
+            }
+
+            case WM_SETFOCUS:
+            {
+                WindowFocusEvent event;
+                EventDispatcher::Enqueue<WindowFocusEvent>(event);
+                return 0;
+            }
+
+            case WM_KILLFOCUS:
+            {
+                WindowLostFocusEvent event;
+                EventDispatcher::Enqueue<WindowLostFocusEvent>(event);
                 return 0;
             }
 
             default:
             {
-                DefWindowProc(hWnd, message, wParam, lParam);
+                return DefWindowProc(hWnd, message, wParam, lParam);
             }
         }
 

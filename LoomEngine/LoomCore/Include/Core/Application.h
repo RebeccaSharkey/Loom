@@ -3,6 +3,7 @@
 #pragma once
 
 #include "LoomEngine.h"
+#include "Events/EventHandle.h"
 #include "Events/EventMacro.h"
 #include "Window/Window.h"
 
@@ -37,14 +38,18 @@ namespace Loom
         virtual void OnUpdate(const float DeltaTime) {}
         virtual void OnShutdown() {}
 
-        void Close();
-
     private:
         void Run();
 
         bool bIsRunning = true;
         ApplicationSpecification m_Specification;
         std::unique_ptr<Window> m_Window;
+
+    public:
+        void BindWindowEvents();
+
+        void OnClose();
+
    };
 
     // To be defined in the client (Editor, Game, App...)

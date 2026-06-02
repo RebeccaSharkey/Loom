@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "LoomEngine.h"
 
 
@@ -29,8 +31,8 @@ namespace Loom
         virtual ~Window() = default;
 
         virtual void PollEvents() = 0;
+
         virtual void OnUpdate() = 0;
-        virtual bool ShouldClose() const = 0;
 
         virtual uint32 GetWidth() const = 0;
         virtual uint32 GetHeight() const = 0;

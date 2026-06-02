@@ -45,6 +45,8 @@ set(LOOM_EVENT_HEADERS
         Include/Events/EventDispatcher.h
         Include/Events/EventHandle.h
         Include/Events/EventMacro.h
+
+        Include/Events/Events/WindowsEvents.h
 )
 
 # ----------- Window Module ----------- #

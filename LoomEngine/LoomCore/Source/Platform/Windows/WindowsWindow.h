@@ -2,11 +2,10 @@
 
 #pragma once
 
-#include <Windows.h>
-
 #include "Window/Window.h"
 
 #ifdef LOOM_PLATFORM_WINDOWS
+#include <Windows.h>
 
 namespace Loom
 {
@@ -29,17 +28,15 @@ namespace Loom
 
     public:
         void PollEvents() override;
+
         void OnUpdate() override;
 
     private:
-
-        bool m_ShouldClose = false;
-        uint32_t m_Width = 0;
-        uint32_t m_Height = 0;
+        uint32 m_Width = 0;
+        uint32 m_Height = 0;
         bool m_VSync = true;
 
     public:
-        bool ShouldClose() const override { return m_ShouldClose; };
         uint32 GetWidth() const override { return m_Width; };
         uint32 GetHeight() const override { return m_Height; };
 
