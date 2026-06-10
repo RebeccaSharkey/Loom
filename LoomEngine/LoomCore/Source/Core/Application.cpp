@@ -139,37 +139,37 @@ namespace Loom
 
     void Application::OnWindowFocused()
     {
-        LOOM_LOG_INFO("Application", "Window Focused");
+        //LOOM_LOG_INFO("Application", "Window Focused");
     }
 
     void Application::OnWindowLostFocus()
     {
-        LOOM_LOG_INFO("Application", "Window Lost Focus");
+        //LOOM_LOG_INFO("Application", "Window Lost Focus");
     }
 
     void Application::OnWindowResize(uint32 width, uint32 height)
     {
-        LOOM_LOG_INFO("Application", "Window Resized to %dx%d", width, height);
+        //LOOM_LOG_INFO("Application", "Window Resized to %dx%d", width, height);
     }
 
     void Application::OnWindowMoved(int32 x, int32 y)
     {
-        LOOM_LOG_INFO("Application", "Window Moved to %d,%d", x, y);
+        //LOOM_LOG_INFO("Application", "Window Moved to %d,%d", x, y);
     }
 
     void Application::OnWindowMinimized()
     {
-        LOOM_LOG_INFO("Application", "Window Minimized");
+        // LOOM_LOG_INFO("Application", "Window Minimized");
     }
 
     void Application::OnWindowMaximized()
     {
-        LOOM_LOG_INFO("Application", "Window Maximized");
+        // LOOM_LOG_INFO("Application", "Window Maximized");
     }
 
     void Application::OnWindowRestored()
     {
-        LOOM_LOG_INFO("Application", "Window Restored");
+        // LOOM_LOG_INFO("Application", "Window Restored");
     }
 }
 
