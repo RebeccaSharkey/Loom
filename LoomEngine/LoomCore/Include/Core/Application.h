@@ -46,7 +46,17 @@ namespace Loom
 
         void Run();
         void BindWindowEvents();
-        void OnClose();
+
+        // Window Events
+        void OnWindowCreated();
+        void OnWindowClosed();
+        void OnWindowFocused();
+        void OnWindowLostFocus();
+        void OnWindowResize(uint32 width, uint32 height);
+        void OnWindowMoved(int32 x, int32 y);
+        void OnWindowMinimized();
+        void OnWindowMaximized();
+        void OnWindowRestored();
    };
 
     // To be defined in the client (Editor, Game, App...)

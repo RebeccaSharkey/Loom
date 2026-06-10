@@ -23,13 +23,12 @@ namespace Loom
 
         m_Window.reset(Window::Create(spec.WindowSpec));
         LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
-        
+
+        BindWindowEvents();
         m_Window->SetEventCallback([this](const IEvent& event)
         {
             OnEvent(event);
         });
-
-        BindWindowEvents();
 
         // TODO: Init Renderer
     }
@@ -79,15 +78,94 @@ namespace Loom
 
     void Application::BindWindowEvents()
     {
+        EventDispatcher::Subscribe<WindowCreatedEvent>([this] (const WindowCreatedEvent&)
+        {
+            OnWindowCreated();
+        }, EventSystemID);
+
         EventDispatcher::Subscribe<WindowCloseEvent>([this] (const WindowCloseEvent&)
         {
-            OnClose();
+            OnWindowClosed();
+        }, EventSystemID);
+
+        EventDispatcher::Subscribe<WindowFocusEvent>([this] (const WindowFocusEvent&)
+        {
+            OnWindowFocused();
+        }, EventSystemID);
+
+        EventDispatcher::Subscribe<WindowLostFocusEvent>([this] (const WindowLostFocusEvent&)
+        {
+            OnWindowLostFocus();
+        }, EventSystemID);
+
+        EventDispatcher::Subscribe<WindowResizeEvent>([this] (const WindowResizeEvent& event)
+        {
+            OnWindowResize(event.Width, event.Height);
+        }, EventSystemID);
+
+        EventDispatcher::Subscribe<WindowMoveEvent>([this] (const WindowMoveEvent& event)
+        {
+            OnWindowMoved(event.X, event.Y);
+        }, EventSystemID);
+
+        EventDispatcher::Subscribe<WindowMinimizedEvent>([this] (const WindowMinimizedEvent&)
+        {
+            OnWindowMinimized();
+        }, EventSystemID);
+
+        EventDispatcher::Subscribe<WindowMaximizedEvent>([this] (const WindowMaximizedEvent&)
+        {
+            OnWindowMaximized();
+        }, EventSystemID);
+
+        EventDispatcher::Subscribe<WindowRestoredEvent>([this] (const WindowRestoredEvent&)
+        {
+            OnWindowRestored();
         }, EventSystemID);
     }
 
-    void Application::OnClose()
+    void Application::OnWindowCreated()
+    {
+    }
+
+    void Application::OnWindowClosed()
     {
         bIsRunning = false;
+    }
+
+    void Application::OnWindowFocused()
+    {
+        LOOM_LOG_INFO("Application", "Window Focused");
+    }
+
+    void Application::OnWindowLostFocus()
+    {
+        LOOM_LOG_INFO("Application", "Window Lost Focus");
+    }
+
+    void Application::OnWindowResize(uint32 width, uint32 height)
+    {
+        LOOM_LOG_INFO("Application", "Window Resized to %dx%d", width, height);
+    }
+
+    void Application::OnWindowMoved(int32 x, int32 y)
+    {
+        LOOM_LOG_INFO("Application", "Window Moved to %d,%d", x, y);
+    }
+
+    void Application::OnWindowMinimized()
+    {
+        LOOM_LOG_INFO("Application", "Window Minimized");
+    }
+
+    void Application::OnWindowMaximized()
+    {
+        LOOM_LOG_INFO("Application", "Window Maximized");
+    }
+
+    void Application::OnWindowRestored()
+    {
+        LOOM_LOG_INFO("Application", "Window Restored");
     }
 }
 

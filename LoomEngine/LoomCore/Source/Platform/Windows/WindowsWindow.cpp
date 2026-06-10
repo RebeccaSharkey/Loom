@@ -117,6 +117,13 @@ namespace Loom {
     {
         switch (message)
         {
+            case WM_CREATE:
+            {
+                const WindowCreatedEvent event;
+                DispatchEvent(event);
+                return 0;
+            }
+
             case WM_CLOSE:
             {
                 const WindowCloseEvent event;
@@ -130,15 +137,6 @@ namespace Loom {
                 return 0;
             }
 
-            case WM_SIZE:
-            {
-                m_Width = LOWORD(lParam);
-                m_Height = HIWORD(lParam);
-                const WindowResizeEvent event(m_Width, m_Height);
-                DispatchEvent(event);
-                return 0;
-            }
-
             case WM_SETFOCUS:
             {
                 const WindowFocusEvent event;
@@ -149,6 +147,47 @@ namespace Loom {
             case WM_KILLFOCUS:
             {
                 const WindowLostFocusEvent event;
+                DispatchEvent(event);
+                return 0;
+            }
+
+            case WM_SIZE:
+            {
+                m_Width = LOWORD(lParam);
+                m_Height = HIWORD(lParam);
+
+                switch (wParam)
+                {
+                    case SIZE_MINIMIZED:
+                    {
+                        const WindowMinimizedEvent event;
+                        DispatchEvent(event);
+                        break;
+                    }
+
+                    case SIZE_MAXIMIZED:
+                    {
+                        const WindowMaximizedEvent event;
+                        DispatchEvent(event);
+                        break;
+                    }
+
+                    case SIZE_RESTORED:
+                    {
+                        const WindowRestoredEvent event;
+                        DispatchEvent(event);
+                        break;
+                    }
+                }
+
+                const WindowResizeEvent event(m_Width, m_Height);
+                DispatchEvent(event);
+                return 0;
+            }
+
+            case WM_MOVE:
+            {
+                const WindowMoveEvent event(LOWORD(lParam), HIWORD(lParam));
                 DispatchEvent(event);
                 return 0;
             }
