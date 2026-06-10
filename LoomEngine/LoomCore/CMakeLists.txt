@@ -48,6 +48,18 @@ set(LOOM_EVENT_HEADERS
 
         Include/Events/Events/WindowEvents.h
         Include/Events/Events/KeyEvents.h
+        Include/Events/Events/MouseEvents.h
+)
+
+# ----------- Input Module ----------- #
+set(LOOM_INPUT_SOURCES
+        Source/Input/Input.cpp
+)
+
+set(LOOM_INPUT_HEADERS
+        Include/Input/Input.h
+        Include/Input/KeyCodes.h
+        Include/Input/MouseCodes.h
 )
 
 # ----------- Window Module ----------- #
@@ -99,6 +111,8 @@ set(LOOM_ENGINE_SOURCES
         ${LOOM_LOG_HEADERS}
         ${LOOM_EVENT_SOURCES}
         ${LOOM_EVENT_HEADERS}
+        ${LOOM_INPUT_SOURCES}
+        ${LOOM_INPUT_HEADERS}
         ${LOOM_WINDOW_SOURCES}
         ${LOOM_WINDOW_HEADERS}
         ${LOOM_PLATFORM_SOURCES}

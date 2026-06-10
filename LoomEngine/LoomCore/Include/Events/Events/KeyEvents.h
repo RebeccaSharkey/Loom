@@ -2,11 +2,12 @@
 
 #pragma once
 
-#include "LoomEngine.h"
+#include "Events/EventMacro.h"
+#include "Input/KeyCodes.h"
 
 namespace Loom
 {
-    LOOM_EVENT(KeyPressedEvent, (uint16, KeyCode))
-    LOOM_EVENT(KeyReleasedEvent, (uint16, KeyCode))
+    LOOM_EVENT(KeyPressedEvent, (KeyCode, Key), (bool, IsRepeat))
+    LOOM_EVENT(KeyReleasedEvent, (KeyCode, Key))
     LOOM_EVENT(TextInputEvent, (uint32, Codepoint))
 }

@@ -46,6 +46,9 @@ namespace Loom
         uint32 m_Width = 0;
         uint32 m_Height = 0;
         bool m_VSync = true;
+        bool m_HasLastMousePosition = false;
+        float32 m_LastMouseX = 0.0f;
+        float32 m_LastMouseY = 0.0f;
 
     public:
         uint32 GetWidth() const override { return m_Width; };
