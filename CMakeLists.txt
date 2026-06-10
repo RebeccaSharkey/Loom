@@ -11,4 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Build/Lib)
 
 # Add LoomCore (Engine) subproject
 add_subdirectory(LoomEngine)
+add_subdirectory(Sandbox)
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT LoomSandbox)
 
