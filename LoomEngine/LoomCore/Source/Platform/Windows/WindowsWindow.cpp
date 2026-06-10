@@ -5,10 +5,9 @@
 #ifdef LOOM_PLATFORM_WINDOWS
 
 #include "LoomEngine.h"
+#include "Events/Events/KeyEvents.h"
+#include "Events/Events/WindowEvents.h"
 #include <windows.h>
-
-#include "../../../Include/Events/Events/WindowsEvents.h"
-#include "Events/EventDispatcher.h"
 
 namespace Loom {
     Window *Window::Create(const WindowSpecification &spec)
@@ -17,6 +16,7 @@ namespace Loom {
     }
 
     WindowsWindow::WindowsWindow(const WindowSpecification &spec)
+        : m_Width(spec.Width), m_Height(spec.Height), m_VSync(spec.VSync)
     {
         LOOM_LOG_TRACE("Window", "Creating Windows window: %s (%ux%u)", spec.Title.c_str(), spec.Width, spec.Height);
 
@@ -65,7 +65,7 @@ namespace Loom {
 
         // Convert UTF-8 title to wide string
         int wideLength = MultiByteToWideChar(CP_UTF8, 0, spec.Title.c_str(), -1, nullptr, 0);
-        wchar_t* wideTitle = new wchar_t[wideLength];
+        auto* wideTitle = new wchar_t[wideLength];
         MultiByteToWideChar(CP_UTF8, 0, spec.Title.c_str(), -1, wideTitle, wideLength);
 
         m_WindowHandle = CreateWindowExW(
@@ -96,7 +96,7 @@ namespace Loom {
 
         if (msg == WM_CREATE)
         {
-            CREATESTRUCTW* createStruct = reinterpret_cast<CREATESTRUCTW*>(lParam);
+            const auto* createStruct = reinterpret_cast<CREATESTRUCTW*>(lParam);
             window = static_cast<WindowsWindow*>(createStruct->lpCreateParams);
             SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
         }
@@ -119,8 +119,8 @@ namespace Loom {
         {
             case WM_CLOSE:
             {
-                WindowCloseEvent event;
-                EventDispatcher::Enqueue<WindowCloseEvent>(event);
+                const WindowCloseEvent event;
+                DispatchEvent(event);
                 return 0;
             }
 
@@ -134,22 +134,45 @@ namespace Loom {
             {
                 m_Width = LOWORD(lParam);
                 m_Height = HIWORD(lParam);
-                WindowResizeEvent event(m_Width, m_Height);
-                EventDispatcher::Enqueue<WindowResizeEvent>(event);
+                const WindowResizeEvent event(m_Width, m_Height);
+                DispatchEvent(event);
                 return 0;
             }
 
             case WM_SETFOCUS:
             {
-                WindowFocusEvent event;
-                EventDispatcher::Enqueue<WindowFocusEvent>(event);
+                const WindowFocusEvent event;
+                DispatchEvent(event);
                 return 0;
             }
 
             case WM_KILLFOCUS:
             {
-                WindowLostFocusEvent event;
-                EventDispatcher::Enqueue<WindowLostFocusEvent>(event);
+                const WindowLostFocusEvent event;
+                DispatchEvent(event);
+                return 0;
+            }
+
+            case WM_KEYDOWN:
+            case WM_SYSKEYDOWN:
+            {
+                const KeyPressedEvent event(static_cast<uint16>(wParam));
+                DispatchEvent(event);
+                return 0;
+            }
+
+            case WM_KEYUP:
+            case WM_SYSKEYUP:
+            {
+                const KeyReleasedEvent event(static_cast<uint16>(wParam));
+                DispatchEvent(event);
+                return 0;
+            }
+
+            case WM_CHAR:
+            {
+                const TextInputEvent event(static_cast<uint32>(wParam));
+                DispatchEvent(event);
                 return 0;
             }
 

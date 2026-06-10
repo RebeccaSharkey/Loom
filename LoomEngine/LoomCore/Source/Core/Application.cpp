@@ -4,7 +4,7 @@
 
 #include "Core/Time.h"
 #include "Events/EventDispatcher.h"
-#include "Events/Events/WindowsEvents.h"
+#include "Events/Events/WindowEvents.h"
 #include "Window/Window.h"
 
 namespace Loom
@@ -23,10 +23,13 @@ namespace Loom
 
         m_Window.reset(Window::Create(spec.WindowSpec));
         LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
+        
+        m_Window->SetEventCallback([this](const IEvent& event)
+        {
+            OnEvent(event);
+        });
 
         BindWindowEvents();
-
-        // TODO: Init Window Events
 
         // TODO: Init Renderer
     }
@@ -67,6 +70,11 @@ namespace Loom
         }
 
         OnShutdown();
+    }
+
+    void Application::OnEvent(const IEvent& event)
+    {
+        EventDispatcher::Broadcast(event);
     }
 
     void Application::BindWindowEvents()

@@ -47,6 +47,7 @@ namespace Loom
 
         template<typename EventT>
         static void Broadcast(const EventT& event);
+        static void Broadcast(const IEvent& event);
 
         template<typename EventT>
         static void Enqueue(const EventT& event);

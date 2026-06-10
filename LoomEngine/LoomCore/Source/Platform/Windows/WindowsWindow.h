@@ -5,6 +5,7 @@
 #include "Window/Window.h"
 
 #ifdef LOOM_PLATFORM_WINDOWS
+#include <utility>
 #include <Windows.h>
 
 namespace Loom
@@ -18,7 +19,8 @@ namespace Loom
     private:
         static constexpr const wchar_t* s_WindowClassName = L"LoomWindowClass";
         HWND m_WindowHandle = nullptr;
-        HINSTANCE m_InstanceHandle = nullptr;
+        HINSTANCE m_InstanceHandle = GetModuleHandleW(nullptr);
+        EventCallbackFn m_EventCallback;
 
         void RegisterWindowClass();
         void CreateWindowHandle(const WindowSpecification& spec);
@@ -26,7 +28,16 @@ namespace Loom
         static LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
         LRESULT WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+        template<typename EventT>
+        void DispatchEvent(const EventT& event)
+        {
+            if (m_EventCallback)
+                m_EventCallback(event);
+        }
+
     public:
+        void SetEventCallback(EventCallbackFn callback) override { m_EventCallback = std::move(callback); }
+
         void PollEvents() override;
 
         void OnUpdate() override;

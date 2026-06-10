@@ -1,4 +1,4 @@
-﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.#ifndef LOOM_WINDOWSEVENTS_H
+﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #pragma once
 

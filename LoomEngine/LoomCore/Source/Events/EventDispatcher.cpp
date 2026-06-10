@@ -76,6 +76,11 @@ namespace Loom
         }
     }
 
+    void EventDispatcher::Broadcast(const IEvent& event)
+    {
+        InternalBroadcast(event.GetEventTypeID(), &event);
+    }
+
     void EventDispatcher::Flush()
     {
         std::vector<QueuedEvent> queue;

@@ -5,6 +5,7 @@
 #include <functional>
 
 #include "LoomEngine.h"
+#include "Events/IEvent.h"
 
 
 namespace Loom
@@ -26,9 +27,13 @@ namespace Loom
     class LOOM_API Window
     {
     public:
+        using EventCallbackFn = std::function<void(const IEvent&)>;
+
         static Window* Create(const WindowSpecification& spec = WindowSpecification());
 
         virtual ~Window() = default;
+
+        virtual void SetEventCallback(EventCallbackFn callback) = 0;
 
         virtual void PollEvents() = 0;
 

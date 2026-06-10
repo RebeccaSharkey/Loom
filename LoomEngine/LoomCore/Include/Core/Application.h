@@ -37,19 +37,16 @@ namespace Loom
         virtual void OnStart() {}
         virtual void OnUpdate(const float DeltaTime) {}
         virtual void OnShutdown() {}
+        virtual void OnEvent(const IEvent& event);
 
     private:
-        void Run();
-
         bool bIsRunning = true;
         ApplicationSpecification m_Specification;
         std::unique_ptr<Window> m_Window;
 
-    public:
+        void Run();
         void BindWindowEvents();
-
         void OnClose();
-
    };
 
     // To be defined in the client (Editor, Game, App...)
