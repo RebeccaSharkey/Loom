@@ -10,7 +10,10 @@
 #include "Events/EventType.h"
 #include "Events/EventMacro.h"
 
-#include "Input/Input.h"
+#include "Input/InputAction.h"
+#include "Input/InputContext.h"
+#include "Input/InputSubsystem.h"
+#include "Input/InputTypes.h"
 #include "Input/KeyCodes.h"
 #include "Input/MouseCodes.h"
 

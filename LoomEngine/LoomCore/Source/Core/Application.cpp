@@ -5,7 +5,7 @@
 #include "Core/Time.h"
 #include "Events/EventDispatcher.h"
 #include "Events/Events/WindowEvents.h"
-#include "Input/Input.h"
+#include "../Input/InputRuntime.h"
 #include "Window/Window.h"
 
 namespace Loom
@@ -26,7 +26,7 @@ namespace Loom
         LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
 
         BindWindowEvents();
-        Input::Initialize();
+        InputRuntime::Initialize();
 
         m_Window->SetEventCallback([this](const IEvent& event)
         {
@@ -42,7 +42,7 @@ namespace Loom
 
         m_Window.reset();
 
-        Input::Shutdown();
+        InputRuntime::Shutdown();
         EventDispatcher::UnsubscribeAll();
 
         LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
@@ -65,11 +65,11 @@ namespace Loom
 
             Time::UpdateTime(deltaTime);
 
-            Input::BeginFrame();
+            InputRuntime::BeginFrame();
             m_Window->PollEvents();
             EventDispatcher::Flush();
+            InputRuntime::EndFrame();
             OnUpdate(static_cast<float>(deltaTime));
-            Input::EndFrame();
         }
 
         OnShutdown();

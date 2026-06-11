@@ -1,0 +1,373 @@
+// Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
+
+#include "InputRuntime.h"
+
+#include "Events/EventDispatcher.h"
+#include "Events/Events/KeyEvents.h"
+#include "Events/Events/MouseEvents.h"
+#include "Events/Events/WindowEvents.h"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace Loom
+{
+    namespace
+    {
+        constexpr size_t KeyCount = static_cast<size_t>(KeyCode::Count);
+        constexpr size_t MouseButtonCount = static_cast<size_t>(MouseButton::Count);
+        constexpr float32 InputEpsilon = 0.0001f;
+
+        struct InputState
+        {
+            bool Initialized = false;
+            OwnerID Owner = InvalidOwnerID;
+
+            std::array<bool, KeyCount> CurrentKeys{};
+            std::array<bool, KeyCount> PreviousKeys{};
+
+            std::array<bool, MouseButtonCount> CurrentMouseButtons{};
+            std::array<bool, MouseButtonCount> PreviousMouseButtons{};
+
+            float32 MouseX = 0.0f;
+            float32 MouseY = 0.0f;
+            float32 MouseDeltaX = 0.0f;
+            float32 MouseDeltaY = 0.0f;
+            float32 MouseScrollX = 0.0f;
+            float32 MouseScrollY = 0.0f;
+            InputDeviceType LastDevice = InputDeviceType::Unknown;
+        };
+
+        struct ActiveInputContext
+        {
+            std::string Name;
+            uint32 Priority = 0;
+            uint64 Order = 0;
+        };
+
+        struct RegisteredInputAction
+        {
+            InputBindingHandle Handle = InvalidInputBindingHandle;
+            std::string ActionName;
+            InputTriggerEvent Trigger = InputTriggerEvent::Triggered;
+            InputActionCallback Callback;
+        };
+
+        InputState s_Input;
+        std::unordered_map<std::string, InputContext> s_Contexts;
+        std::vector<ActiveInputContext> s_ActiveContexts;
+        std::vector<RegisteredInputAction> s_ActionCallbacks;
+        InputBindingHandle s_NextBindingHandle = 1;
+        uint64 s_NextContextOrder = 1;
+
+        size_t ToIndex(KeyCode key)
+        {
+            return static_cast<size_t>(key);
+        }
+
+        size_t ToIndex(MouseButton button)
+        {
+            return static_cast<size_t>(button);
+        }
+
+        bool IsValid(KeyCode key)
+        {
+            const size_t index = ToIndex(key);
+            return key != KeyCode::Unknown && index < KeyCount;
+        }
+
+        bool IsValid(MouseButton button)
+        {
+            const size_t index = ToIndex(button);
+            return button != MouseButton::Unknown && index < MouseButtonCount;
+        }
+
+        bool IsValueActive(const InputActionValue& value)
+        {
+            return std::fabs(value.X) > InputEpsilon || std::fabs(value.Y) > InputEpsilon;
+        }
+
+        bool IsKeyDown(KeyCode key, bool previous)
+        {
+            if (!IsValid(key))
+                return false;
+
+            return previous ? s_Input.PreviousKeys[ToIndex(key)] : s_Input.CurrentKeys[ToIndex(key)];
+        }
+
+        bool IsMouseButtonDown(MouseButton button, bool previous)
+        {
+            if (!IsValid(button))
+                return false;
+
+            return previous ? s_Input.PreviousMouseButtons[ToIndex(button)] : s_Input.CurrentMouseButtons[ToIndex(button)];
+        }
+
+        float32 GetBindingScalar(const InputBinding& binding, bool previous)
+        {
+            switch (binding.Type)
+            {
+                case InputBindingType::Key:
+                    return IsKeyDown(binding.Key, previous) ? binding.Scale : 0.0f;
+
+                case InputBindingType::MouseButton:
+                    return IsMouseButtonDown(binding.Button, previous) ? binding.Scale : 0.0f;
+
+                case InputBindingType::MouseX:
+                    return previous ? 0.0f : s_Input.MouseDeltaX * binding.Scale;
+
+                case InputBindingType::MouseY:
+                    return previous ? 0.0f : s_Input.MouseDeltaY * binding.Scale;
+
+                case InputBindingType::MouseWheelX:
+                    return previous ? 0.0f : s_Input.MouseScrollX * binding.Scale;
+
+                case InputBindingType::MouseWheelY:
+                    return previous ? 0.0f : s_Input.MouseScrollY * binding.Scale;
+            }
+
+            return 0.0f;
+        }
+
+        InputActionValue EvaluateActionValue(const InputAction& action, bool previous)
+        {
+            InputActionValue value;
+            value.Type = action.GetValueType();
+
+            for (const InputBinding& binding : action.GetBindings())
+            {
+                const float32 scalar = GetBindingScalar(binding, previous);
+
+                switch (action.GetValueType())
+                {
+                    case InputValueType::Bool:
+                        if (std::fabs(scalar) > InputEpsilon)
+                            value.X = 1.0f;
+                        break;
+
+                    case InputValueType::Axis1D:
+                        value.X += scalar;
+                        break;
+
+                    case InputValueType::Axis2D:
+                        if (binding.Axis == InputValueAxis::X)
+                            value.X += scalar;
+                        else
+                            value.Y += scalar;
+                        break;
+                }
+            }
+
+            return value;
+        }
+
+        const InputAction* FindActiveAction(const std::string& actionName)
+        {
+            for (auto activeIt = s_ActiveContexts.rbegin(); activeIt != s_ActiveContexts.rend(); ++activeIt)
+            {
+                const auto contextIt = s_Contexts.find(activeIt->Name);
+                if (contextIt == s_Contexts.end() || !contextIt->second.IsEnabled())
+                    continue;
+
+                for (const InputAction& action : contextIt->second.GetActions())
+                {
+                    if (action.GetName() == actionName)
+                        return &action;
+                }
+            }
+
+            return nullptr;
+        }
+
+        void SortActiveContexts()
+        {
+            std::sort(s_ActiveContexts.begin(), s_ActiveContexts.end(), [](const ActiveInputContext& left, const ActiveInputContext& right)
+            {
+                if (left.Priority != right.Priority)
+                    return left.Priority < right.Priority;
+
+                return left.Order < right.Order;
+            });
+        }
+
+        bool ShouldDispatch(InputTriggerEvent trigger, bool active, bool previousActive)
+        {
+            switch (trigger)
+            {
+                case InputTriggerEvent::Started:
+                    return active && !previousActive;
+
+                case InputTriggerEvent::Triggered:
+                    return active;
+
+                case InputTriggerEvent::Completed:
+                    return !active && previousActive;
+            }
+
+            return false;
+        }
+
+        void DispatchActionCallbacks()
+        {
+            const std::vector<RegisteredInputAction> callbacks = s_ActionCallbacks;
+            for (const RegisteredInputAction& binding : callbacks)
+            {
+                const InputAction* action = FindActiveAction(binding.ActionName);
+                if (!action || !binding.Callback)
+                    continue;
+
+                const InputActionValue value = EvaluateActionValue(*action, false);
+                const InputActionValue previousValue = EvaluateActionValue(*action, true);
+                const bool active = IsValueActive(value);
+                const bool previousActive = IsValueActive(previousValue);
+
+                if (!ShouldDispatch(binding.Trigger, active, previousActive))
+                    continue;
+
+                InputActionEvent event;
+                event.Action = action;
+                event.Trigger = binding.Trigger;
+                event.Value = value;
+                event.Device = s_Input.LastDevice;
+                binding.Callback(event);
+            }
+        }
+    }
+
+    void InputRuntime::Initialize()
+    {
+        if (s_Input.Initialized)
+            return;
+
+        s_Input.Owner = GenerateOwnerID();
+        s_Input.Initialized = true;
+
+        EventDispatcher::Subscribe<KeyPressedEvent>([](const KeyPressedEvent& event)
+        {
+            s_Input.LastDevice = InputDeviceType::Keyboard;
+            if (IsValid(event.Key))
+                s_Input.CurrentKeys[ToIndex(event.Key)] = true;
+        }, s_Input.Owner);
+
+        EventDispatcher::Subscribe<KeyReleasedEvent>([](const KeyReleasedEvent& event)
+        {
+            s_Input.LastDevice = InputDeviceType::Keyboard;
+            if (IsValid(event.Key))
+                s_Input.CurrentKeys[ToIndex(event.Key)] = false;
+        }, s_Input.Owner);
+
+        EventDispatcher::Subscribe<MouseMovedEvent>([](const MouseMovedEvent& event)
+        {
+            s_Input.LastDevice = InputDeviceType::Mouse;
+            s_Input.MouseX = event.X;
+            s_Input.MouseY = event.Y;
+            s_Input.MouseDeltaX += event.DeltaX;
+            s_Input.MouseDeltaY += event.DeltaY;
+        }, s_Input.Owner);
+
+        EventDispatcher::Subscribe<MouseButtonPressedEvent>([](const MouseButtonPressedEvent& event)
+        {
+            s_Input.LastDevice = InputDeviceType::Mouse;
+            if (IsValid(event.Button))
+                s_Input.CurrentMouseButtons[ToIndex(event.Button)] = true;
+        }, s_Input.Owner);
+
+        EventDispatcher::Subscribe<MouseButtonReleasedEvent>([](const MouseButtonReleasedEvent& event)
+        {
+            s_Input.LastDevice = InputDeviceType::Mouse;
+            if (IsValid(event.Button))
+                s_Input.CurrentMouseButtons[ToIndex(event.Button)] = false;
+        }, s_Input.Owner);
+
+        EventDispatcher::Subscribe<MouseScrolledEvent>([](const MouseScrolledEvent& event)
+        {
+            s_Input.LastDevice = InputDeviceType::Mouse;
+            s_Input.MouseScrollX += event.XOffset;
+            s_Input.MouseScrollY += event.YOffset;
+        }, s_Input.Owner);
+
+        EventDispatcher::Subscribe<WindowLostFocusEvent>([](const WindowLostFocusEvent&)
+        {
+            s_Input.CurrentKeys.fill(false);
+            s_Input.CurrentMouseButtons.fill(false);
+        }, s_Input.Owner);
+    }
+
+    void InputRuntime::Shutdown()
+    {
+        if (!s_Input.Initialized)
+            return;
+
+        EventDispatcher::UnsubscribeAllForOwner(s_Input.Owner);
+        s_Input = InputState{};
+        s_Contexts.clear();
+        s_ActiveContexts.clear();
+        s_ActionCallbacks.clear();
+        s_NextBindingHandle = 1;
+        s_NextContextOrder = 1;
+    }
+
+    void InputRuntime::BeginFrame()
+    {
+        s_Input.PreviousKeys = s_Input.CurrentKeys;
+        s_Input.PreviousMouseButtons = s_Input.CurrentMouseButtons;
+        s_Input.MouseDeltaX = 0.0f;
+        s_Input.MouseDeltaY = 0.0f;
+        s_Input.MouseScrollX = 0.0f;
+        s_Input.MouseScrollY = 0.0f;
+    }
+
+    void InputRuntime::EndFrame()
+    {
+        DispatchActionCallbacks();
+    }
+
+    void InputRuntime::PushContext(const InputContext& context, uint32 priority)
+    {
+        if (!context.IsValid())
+            return;
+
+        s_Contexts[context.GetName()] = context;
+        s_ActiveContexts.push_back({context.GetName(), priority, s_NextContextOrder++});
+        SortActiveContexts();
+    }
+
+    void InputRuntime::RemoveContext(const std::string& context)
+    {
+        s_ActiveContexts.erase(std::remove_if(s_ActiveContexts.begin(), s_ActiveContexts.end(), [&context](const ActiveInputContext& activeContext)
+        {
+            return activeContext.Name == context;
+        }), s_ActiveContexts.end());
+
+        const bool stillActive = std::any_of(s_ActiveContexts.begin(), s_ActiveContexts.end(), [&context](const ActiveInputContext& activeContext)
+        {
+            return activeContext.Name == context;
+        });
+
+        if (!stillActive)
+            s_Contexts.erase(context);
+    }
+
+    InputBindingHandle InputRuntime::BindAction(const InputAction& action, InputTriggerEvent trigger, InputActionCallback callback)
+    {
+        if (!action.IsValid() || !callback)
+            return InvalidInputBindingHandle;
+
+        const InputBindingHandle handle = s_NextBindingHandle++;
+        s_ActionCallbacks.push_back({handle, action.GetName(), trigger, std::move(callback)});
+        return handle;
+    }
+
+    void InputRuntime::UnbindAction(InputBindingHandle handle)
+    {
+        s_ActionCallbacks.erase(std::remove_if(s_ActionCallbacks.begin(), s_ActionCallbacks.end(), [handle](const RegisteredInputAction& binding)
+        {
+            return binding.Handle == handle;
+        }), s_ActionCallbacks.end());
+    }
+}

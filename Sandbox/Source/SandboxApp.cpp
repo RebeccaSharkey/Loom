@@ -7,6 +7,18 @@ class LoomSandbox final : public Loom::Application
 {
 
     Loom::OwnerID EventOwner = Loom::GenerateOwnerID();
+    Loom::InputSubsystem Input;
+
+    Loom::InputAction JumpAction{"Jump", Loom::KeyCode::Space};
+    Loom::InputAction FireAction{"Fire", Loom::MouseButton::Left};
+    Loom::InputAction MoveAction{"Move", Loom::InputValueType::Axis2D};
+    Loom::InputAction LookAction{"Look", Loom::InputValueType::Axis2D};
+
+    Loom::InputContext GameplayContext{"Gameplay"};
+
+    Loom::InputVector2 MoveInput{};
+    Loom::InputVector2 LookInput{};
+    bool bFireHeld = false;
 
 public:
     LoomSandbox()
@@ -19,18 +31,70 @@ public:
 
     void OnStart() override
     {
+        MoveAction
+            .BindKey(Loom::KeyCode::W, 1.0f, Loom::InputValueAxis::Y)
+            .BindKey(Loom::KeyCode::S, -1.0f, Loom::InputValueAxis::Y)
+            .BindKey(Loom::KeyCode::D, 1.0f, Loom::InputValueAxis::X)
+            .BindKey(Loom::KeyCode::A, -1.0f, Loom::InputValueAxis::X);
+
+        LookAction
+            .BindMouseX(1.0f)
+            .BindMouseY(-1.0f);
+
+        GameplayContext
+            .AddAction(JumpAction)
+            .AddAction(FireAction)
+            .AddAction(MoveAction)
+            .AddAction(LookAction);
+
+        Input.AddContext(GameplayContext);
+        Input.BindAction(JumpAction, Loom::InputTriggerEvent::Started, this, &LoomSandbox::OnJumpStarted);
+        Input.BindAction(FireAction, Loom::InputTriggerEvent::Started, this, &LoomSandbox::OnFireStarted);
+        Input.BindAction(FireAction, Loom::InputTriggerEvent::Completed, this, &LoomSandbox::OnFireCompleted);
+        Input.BindAction(MoveAction, Loom::InputTriggerEvent::Triggered, this, &LoomSandbox::OnMove);
+        Input.BindAction(MoveAction, Loom::InputTriggerEvent::Completed, this, &LoomSandbox::OnMove);
+        Input.BindAction(LookAction, Loom::InputTriggerEvent::Triggered, this, &LoomSandbox::OnLook);
+
         LOOM_LOG_NOTICE("Sandbox", "Sandbox Started.");
     }
 
     void OnUpdate(const float deltaTime) override
     {
-
+        (void)deltaTime;
     }
 
     void OnShutdown() override
     {
         Loom::EventDispatcher::UnsubscribeAllForOwner(EventOwner);
         LOOM_LOG_NOTICE("Sandbox", "Sandbox shutdown.");
+    }
+
+private:
+    void OnJumpStarted(const Loom::InputActionEvent& event)
+    {
+        LOOM_LOG_INFO("Sandbox", "%s started", event.Action->GetName().c_str());
+    }
+
+    void OnFireStarted(const Loom::InputActionEvent&)
+    {
+        bFireHeld = true;
+        LOOM_LOG_INFO("Sandbox", "Fire started");
+    }
+
+    void OnFireCompleted(const Loom::InputActionEvent&)
+    {
+        bFireHeld = false;
+        LOOM_LOG_INFO("Sandbox", "Fire completed");
+    }
+
+    void OnMove(const Loom::InputActionEvent& event)
+    {
+        MoveInput = event.GetVector2();
+    }
+
+    void OnLook(const Loom::InputActionEvent& event)
+    {
+        LookInput = event.GetVector2();
     }
 
 };

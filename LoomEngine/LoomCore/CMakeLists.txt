@@ -53,13 +53,21 @@ set(LOOM_EVENT_HEADERS
 
 # ----------- Input Module ----------- #
 set(LOOM_INPUT_SOURCES
-        Source/Input/Input.cpp
+        Source/Input/InputAction.cpp
+        Source/Input/InputContext.cpp
+        Source/Input/InputRuntime.cpp
+        Source/Input/InputSubsystem.cpp
+        Source/Input/InputTypes.cpp
 )
 
 set(LOOM_INPUT_HEADERS
-        Include/Input/Input.h
+        Include/Input/InputAction.h
+        Include/Input/InputContext.h
+        Include/Input/InputSubsystem.h
+        Include/Input/InputTypes.h
         Include/Input/KeyCodes.h
         Include/Input/MouseCodes.h
+        Source/Input/InputRuntime.h
 )
 
 # ----------- Window Module ----------- #
