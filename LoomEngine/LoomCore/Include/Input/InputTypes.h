@@ -7,6 +7,7 @@
 #include "Math/Math.h"
 #include "Input/KeyCodes.h"
 #include "Input/MouseCodes.h"
+#include <string>
 
 namespace Loom
 {
@@ -52,6 +53,18 @@ namespace Loom
 
     using InputBindingHandle = uint64;
     constexpr InputBindingHandle InvalidInputBindingHandle = 0;
+
+    using InputActionID = uint32;
+    constexpr InputActionID InvalidInputActionID = 0;
+
+    using InputContextID = uint32;
+    constexpr InputContextID InvalidInputContextID = 0;
+
+    using InputContextHandle = uint64;
+    constexpr InputContextHandle InvalidInputContextHandle = 0;
+
+    LOOM_API InputActionID MakeInputActionID(const std::string& name);
+    LOOM_API InputContextID MakeInputContextID(const std::string& name);
 
     struct LOOM_API InputBinding
     {

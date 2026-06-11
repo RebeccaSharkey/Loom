@@ -22,10 +22,11 @@ namespace Loom
         static void BeginFrame();
         static void EndFrame();
 
-        static void PushContext(const InputContext& context, uint32 priority);
-        static void RemoveContext(const std::string& context);
+        static InputContextHandle PushContext(const InputContext& context, uint32 priority);
+        static void RemoveContext(InputContextHandle handle);
 
-        static InputBindingHandle BindAction(const InputAction& action, InputTriggerEvent trigger, InputActionCallback callback);
+        static InputBindingHandle BindAction(const InputAction& action, InputTriggerEvent trigger, OwnerID owner, InputActionCallback callback);
         static void UnbindAction(InputBindingHandle handle);
+        static void UnbindAllForOwner(OwnerID owner);
     };
 }

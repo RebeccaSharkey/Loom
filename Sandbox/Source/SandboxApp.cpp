@@ -15,6 +15,7 @@ class LoomSandbox final : public Loom::Application
     Loom::InputAction LookAction{"Look", Loom::InputValueType::Axis2D};
 
     Loom::InputContext GameplayContext{"Gameplay"};
+    Loom::InputContextHandle GameplayContextHandle = Loom::InvalidInputContextHandle;
 
     Loom::Vector2 MoveInput{};
     Loom::Vector2 LookInput{};
@@ -48,13 +49,13 @@ public:
             .AddAction(MoveAction)
             .AddAction(LookAction);
 
-        Input.AddContext(GameplayContext);
-        Input.BindAction(JumpAction, Loom::InputTriggerEvent::Started, this, &LoomSandbox::OnJumpStarted);
-        Input.BindAction(FireAction, Loom::InputTriggerEvent::Started, this, &LoomSandbox::OnFireStarted);
-        Input.BindAction(FireAction, Loom::InputTriggerEvent::Completed, this, &LoomSandbox::OnFireCompleted);
-        Input.BindAction(MoveAction, Loom::InputTriggerEvent::Triggered, this, &LoomSandbox::OnMove);
-        Input.BindAction(MoveAction, Loom::InputTriggerEvent::Completed, this, &LoomSandbox::OnMove);
-        Input.BindAction(LookAction, Loom::InputTriggerEvent::Triggered, this, &LoomSandbox::OnLook);
+        GameplayContextHandle = Input.AddContext(GameplayContext);
+        Input.BindAction(JumpAction, Loom::InputTriggerEvent::Started, EventOwner, this, &LoomSandbox::OnJumpStarted);
+        Input.BindAction(FireAction, Loom::InputTriggerEvent::Started, EventOwner, this, &LoomSandbox::OnFireStarted);
+        Input.BindAction(FireAction, Loom::InputTriggerEvent::Completed, EventOwner, this, &LoomSandbox::OnFireCompleted);
+        Input.BindAction(MoveAction, Loom::InputTriggerEvent::Triggered, EventOwner, this, &LoomSandbox::OnMove);
+        Input.BindAction(MoveAction, Loom::InputTriggerEvent::Completed, EventOwner, this, &LoomSandbox::OnMove);
+        Input.BindAction(LookAction, Loom::InputTriggerEvent::Triggered, EventOwner, this, &LoomSandbox::OnLook);
 
         LOOM_LOG_NOTICE("Sandbox", "Sandbox Started.");
     }
@@ -66,6 +67,8 @@ public:
 
     void OnShutdown() override
     {
+        Input.UnbindAllForOwner(EventOwner);
+        Input.RemoveContext(GameplayContextHandle);
         Loom::EventDispatcher::UnsubscribeAllForOwner(EventOwner);
         LOOM_LOG_NOTICE("Sandbox", "Sandbox shutdown.");
     }

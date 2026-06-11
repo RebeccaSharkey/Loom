@@ -23,26 +23,28 @@ namespace Loom
         InputSubsystem(InputSubsystem&& other) noexcept;
         InputSubsystem& operator=(InputSubsystem&& other) noexcept;
 
-        void AddContext(const InputContext& context, uint32 priority = 0);
-        void RemoveContext(const InputContext& context);
+        InputContextHandle AddContext(const InputContext& context, uint32 priority = 0);
+        void RemoveContext(InputContextHandle handle);
         void ClearContexts();
 
         InputBindingHandle BindAction(const InputAction& action, InputTriggerEvent trigger, InputActionCallback callback);
+        InputBindingHandle BindAction(const InputAction& action, InputTriggerEvent trigger, OwnerID owner, InputActionCallback callback);
 
         template<typename InstanceT>
-        InputBindingHandle BindAction(const InputAction& action, InputTriggerEvent trigger, InstanceT* instance, void (InstanceT::*function)(const InputActionEvent&))
+        InputBindingHandle BindAction(const InputAction& action, InputTriggerEvent trigger, OwnerID owner, InstanceT* instance, void (InstanceT::*function)(const InputActionEvent&))
         {
-            return BindAction(action, trigger, [instance, function](const InputActionEvent& event)
+            return BindAction(action, trigger, owner, [instance, function](const InputActionEvent& event)
             {
                 (instance->*function)(event);
             });
         }
 
         void UnbindAction(InputBindingHandle handle);
+        void UnbindAllForOwner(OwnerID owner);
         void ClearBindings();
 
     private:
-        std::vector<std::string> m_Contexts;
+        std::vector<InputContextHandle> m_Contexts;
         std::vector<InputBindingHandle> m_Bindings;
     };
 }

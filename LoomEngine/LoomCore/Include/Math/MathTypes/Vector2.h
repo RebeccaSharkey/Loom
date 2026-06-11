@@ -2,14 +2,15 @@
 
 #pragma once
 
+#include "Core/Types.h"
 #include <cmath>
 
 namespace Loom
 {
     struct Vector2
     {
-        float X;
-        float Y;
+        float32 X = 0.0f;
+        float32 Y = 0.0f;
 
         constexpr Vector2() = default;
 

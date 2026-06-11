@@ -16,6 +16,7 @@ namespace Loom
         InputAction(std::string name, KeyCode key, InputValueType valueType = InputValueType::Bool);
         InputAction(std::string name, MouseButton button, InputValueType valueType = InputValueType::Bool);
 
+        InputActionID GetID() const;
         const std::string& GetName() const;
         InputValueType GetValueType() const;
         const std::vector<InputBinding>& GetBindings() const;
@@ -31,6 +32,7 @@ namespace Loom
         void ClearBindings();
 
     private:
+        InputActionID m_ID = InvalidInputActionID;
         std::string m_Name;
         InputValueType m_ValueType = InputValueType::Bool;
         std::vector<InputBinding> m_Bindings;

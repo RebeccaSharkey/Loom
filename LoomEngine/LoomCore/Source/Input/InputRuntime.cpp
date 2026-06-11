@@ -45,24 +45,42 @@ namespace Loom
 
         struct ActiveInputContext
         {
-            std::string Name;
+            InputContextHandle Handle = InvalidInputContextHandle;
+            InputContext Context;
             uint32 Priority = 0;
             uint64 Order = 0;
+            bool PendingRemove = false;
         };
 
         struct RegisteredInputAction
         {
             InputBindingHandle Handle = InvalidInputBindingHandle;
-            std::string ActionName;
+            InputActionID ActionID = InvalidInputActionID;
             InputTriggerEvent Trigger = InputTriggerEvent::Triggered;
+            OwnerID Owner = InvalidOwnerID;
             InputActionCallback Callback;
+            bool PendingRemove = false;
+        };
+
+        struct EvaluatedInputAction
+        {
+            const InputAction* Action = nullptr;
+            InputActionValue Current;
+            InputActionValue Previous;
+            bool Started = false;
+            bool Triggered = false;
+            bool Completed = false;
         };
 
         InputState s_Input;
-        std::unordered_map<std::string, InputContext> s_Contexts;
         std::vector<ActiveInputContext> s_ActiveContexts;
+        std::vector<ActiveInputContext> s_PendingContextAdds;
         std::vector<RegisteredInputAction> s_ActionCallbacks;
+        std::vector<RegisteredInputAction> s_PendingActionCallbackAdds;
+        std::unordered_map<InputActionID, EvaluatedInputAction> s_EvaluatedActions;
+        bool s_IsDispatching = false;
         InputBindingHandle s_NextBindingHandle = 1;
+        InputContextHandle s_NextContextHandle = 1;
         uint64 s_NextContextOrder = 1;
 
         size_t ToIndex(KeyCode key)
@@ -166,24 +184,6 @@ namespace Loom
             return value;
         }
 
-        const InputAction* FindActiveAction(const std::string& actionName)
-        {
-            for (auto activeIt = s_ActiveContexts.rbegin(); activeIt != s_ActiveContexts.rend(); ++activeIt)
-            {
-                const auto contextIt = s_Contexts.find(activeIt->Name);
-                if (contextIt == s_Contexts.end() || !contextIt->second.IsEnabled())
-                    continue;
-
-                for (const InputAction& action : contextIt->second.GetActions())
-                {
-                    if (action.GetName() == actionName)
-                        return &action;
-                }
-            }
-
-            return nullptr;
-        }
-
         void SortActiveContexts()
         {
             std::sort(s_ActiveContexts.begin(), s_ActiveContexts.end(), [](const ActiveInputContext& left, const ActiveInputContext& right)
@@ -195,47 +195,113 @@ namespace Loom
             });
         }
 
-        bool ShouldDispatch(InputTriggerEvent trigger, bool active, bool previousActive)
+        bool ShouldDispatch(InputTriggerEvent trigger, const EvaluatedInputAction& action)
         {
             switch (trigger)
             {
                 case InputTriggerEvent::Started:
-                    return active && !previousActive;
+                    return action.Started;
 
                 case InputTriggerEvent::Triggered:
-                    return active;
+                    return action.Triggered;
 
                 case InputTriggerEvent::Completed:
-                    return !active && previousActive;
+                    return action.Completed;
             }
 
             return false;
         }
 
-        void DispatchActionCallbacks()
+        void EvaluateActiveActions()
         {
-            const std::vector<RegisteredInputAction> callbacks = s_ActionCallbacks;
-            for (const RegisteredInputAction& binding : callbacks)
+            s_EvaluatedActions.clear();
+
+            for (auto activeIt = s_ActiveContexts.rbegin(); activeIt != s_ActiveContexts.rend(); ++activeIt)
             {
-                const InputAction* action = FindActiveAction(binding.ActionName);
-                if (!action || !binding.Callback)
+                if (activeIt->PendingRemove || !activeIt->Context.IsEnabled())
                     continue;
 
-                const InputActionValue value = EvaluateActionValue(*action, false);
-                const InputActionValue previousValue = EvaluateActionValue(*action, true);
-                const bool active = IsValueActive(value);
-                const bool previousActive = IsValueActive(previousValue);
+                for (const InputAction& action : activeIt->Context.GetActions())
+                {
+                    if (!action.IsValid() || s_EvaluatedActions.find(action.GetID()) != s_EvaluatedActions.end())
+                        continue;
 
-                if (!ShouldDispatch(binding.Trigger, active, previousActive))
+                    EvaluatedInputAction evaluated;
+                    evaluated.Action = &action;
+                    evaluated.Current = EvaluateActionValue(action, false);
+                    evaluated.Previous = EvaluateActionValue(action, true);
+
+                    const bool active = IsValueActive(evaluated.Current);
+                    const bool previousActive = IsValueActive(evaluated.Previous);
+
+                    evaluated.Started = active && !previousActive;
+                    evaluated.Triggered = active;
+                    evaluated.Completed = !active && previousActive;
+
+                    s_EvaluatedActions[action.GetID()] = evaluated;
+                }
+            }
+        }
+
+        void ApplyPendingInputMutations()
+        {
+            s_ActiveContexts.erase(std::remove_if(s_ActiveContexts.begin(), s_ActiveContexts.end(), [](const ActiveInputContext& context)
+            {
+                return context.PendingRemove;
+            }), s_ActiveContexts.end());
+
+            s_PendingContextAdds.erase(std::remove_if(s_PendingContextAdds.begin(), s_PendingContextAdds.end(), [](const ActiveInputContext& context)
+            {
+                return context.PendingRemove;
+            }), s_PendingContextAdds.end());
+
+            if (!s_PendingContextAdds.empty())
+            {
+                s_ActiveContexts.insert(s_ActiveContexts.end(), s_PendingContextAdds.begin(), s_PendingContextAdds.end());
+                s_PendingContextAdds.clear();
+                SortActiveContexts();
+            }
+
+            s_ActionCallbacks.erase(std::remove_if(s_ActionCallbacks.begin(), s_ActionCallbacks.end(), [](const RegisteredInputAction& binding)
+            {
+                return binding.PendingRemove;
+            }), s_ActionCallbacks.end());
+
+            if (!s_PendingActionCallbackAdds.empty())
+            {
+                s_ActionCallbacks.insert(s_ActionCallbacks.end(), s_PendingActionCallbackAdds.begin(), s_PendingActionCallbackAdds.end());
+                s_PendingActionCallbackAdds.clear();
+            }
+        }
+
+        void DispatchActionCallbacks()
+        {
+            EvaluateActiveActions();
+
+            s_IsDispatching = true;
+            for (const RegisteredInputAction& binding : s_ActionCallbacks)
+            {
+                if (binding.PendingRemove || !binding.Callback)
+                    continue;
+
+                const auto evaluatedIt = s_EvaluatedActions.find(binding.ActionID);
+                if (evaluatedIt == s_EvaluatedActions.end() || !evaluatedIt->second.Action)
+                    continue;
+
+                const EvaluatedInputAction& evaluated = evaluatedIt->second;
+                if (!ShouldDispatch(binding.Trigger, evaluated))
                     continue;
 
                 InputActionEvent event;
-                event.Action = action;
+                event.Action = evaluated.Action;
                 event.Trigger = binding.Trigger;
-                event.Value = value;
+                event.Value = evaluated.Current;
                 event.Device = s_Input.LastDevice;
                 binding.Callback(event);
             }
+
+            s_IsDispatching = false;
+            ApplyPendingInputMutations();
         }
     }
 
@@ -305,10 +371,14 @@ namespace Loom
 
         EventDispatcher::UnsubscribeAllForOwner(s_Input.Owner);
         s_Input = InputState{};
-        s_Contexts.clear();
         s_ActiveContexts.clear();
+        s_PendingContextAdds.clear();
         s_ActionCallbacks.clear();
+        s_PendingActionCallbackAdds.clear();
+        s_EvaluatedActions.clear();
+        s_IsDispatching = false;
         s_NextBindingHandle = 1;
+        s_NextContextHandle = 1;
         s_NextContextOrder = 1;
     }
 
@@ -327,47 +397,127 @@ namespace Loom
         DispatchActionCallbacks();
     }
 
-    void InputRuntime::PushContext(const InputContext& context, uint32 priority)
+    InputContextHandle InputRuntime::PushContext(const InputContext& context, uint32 priority)
     {
         if (!context.IsValid())
+            return InvalidInputContextHandle;
+
+        ActiveInputContext activeContext;
+        activeContext.Handle = s_NextContextHandle++;
+        activeContext.Context = context;
+        activeContext.Priority = priority;
+        activeContext.Order = s_NextContextOrder++;
+
+        if (s_IsDispatching)
+            s_PendingContextAdds.push_back(activeContext);
+        else
+        {
+            s_ActiveContexts.push_back(activeContext);
+            SortActiveContexts();
+        }
+
+        return activeContext.Handle;
+    }
+
+    void InputRuntime::RemoveContext(InputContextHandle handle)
+    {
+        if (handle == InvalidInputContextHandle)
             return;
 
-        s_Contexts[context.GetName()] = context;
-        s_ActiveContexts.push_back({context.GetName(), priority, s_NextContextOrder++});
-        SortActiveContexts();
-    }
-
-    void InputRuntime::RemoveContext(const std::string& context)
-    {
-        s_ActiveContexts.erase(std::remove_if(s_ActiveContexts.begin(), s_ActiveContexts.end(), [&context](const ActiveInputContext& activeContext)
+        auto markPendingRemove = [handle](ActiveInputContext& activeContext)
         {
-            return activeContext.Name == context;
+            if (activeContext.Handle == handle)
+                activeContext.PendingRemove = true;
+        };
+
+        for (ActiveInputContext& activeContext : s_ActiveContexts)
+            markPendingRemove(activeContext);
+
+        for (ActiveInputContext& activeContext : s_PendingContextAdds)
+            markPendingRemove(activeContext);
+
+        if (s_IsDispatching)
+            return;
+
+        s_ActiveContexts.erase(std::remove_if(s_ActiveContexts.begin(), s_ActiveContexts.end(), [](const ActiveInputContext& activeContext)
+        {
+            return activeContext.PendingRemove;
         }), s_ActiveContexts.end());
 
-        const bool stillActive = std::any_of(s_ActiveContexts.begin(), s_ActiveContexts.end(), [&context](const ActiveInputContext& activeContext)
+        s_PendingContextAdds.erase(std::remove_if(s_PendingContextAdds.begin(), s_PendingContextAdds.end(), [](const ActiveInputContext& activeContext)
         {
-            return activeContext.Name == context;
-        });
-
-        if (!stillActive)
-            s_Contexts.erase(context);
+            return activeContext.PendingRemove;
+        }), s_PendingContextAdds.end());
     }
 
-    InputBindingHandle InputRuntime::BindAction(const InputAction& action, InputTriggerEvent trigger, InputActionCallback callback)
+    InputBindingHandle InputRuntime::BindAction(const InputAction& action, InputTriggerEvent trigger, OwnerID owner, InputActionCallback callback)
     {
         if (!action.IsValid() || !callback)
             return InvalidInputBindingHandle;
 
-        const InputBindingHandle handle = s_NextBindingHandle++;
-        s_ActionCallbacks.push_back({handle, action.GetName(), trigger, std::move(callback)});
+        RegisteredInputAction binding;
+        binding.Handle = s_NextBindingHandle++;
+        binding.ActionID = action.GetID();
+        binding.Trigger = trigger;
+        binding.Owner = owner;
+        binding.Callback = std::move(callback);
+
+        const InputBindingHandle handle = binding.Handle;
+        if (s_IsDispatching)
+            s_PendingActionCallbackAdds.push_back(std::move(binding));
+        else
+            s_ActionCallbacks.push_back(std::move(binding));
+
         return handle;
     }
 
     void InputRuntime::UnbindAction(InputBindingHandle handle)
     {
-        s_ActionCallbacks.erase(std::remove_if(s_ActionCallbacks.begin(), s_ActionCallbacks.end(), [handle](const RegisteredInputAction& binding)
+        if (handle == InvalidInputBindingHandle)
+            return;
+
+        for (RegisteredInputAction& binding : s_ActionCallbacks)
+        {
+            if (binding.Handle == handle)
+                binding.PendingRemove = true;
+        }
+
+        s_PendingActionCallbackAdds.erase(std::remove_if(s_PendingActionCallbackAdds.begin(), s_PendingActionCallbackAdds.end(), [handle](const RegisteredInputAction& binding)
         {
             return binding.Handle == handle;
+        }), s_PendingActionCallbackAdds.end());
+
+        if (s_IsDispatching)
+            return;
+
+        s_ActionCallbacks.erase(std::remove_if(s_ActionCallbacks.begin(), s_ActionCallbacks.end(), [](const RegisteredInputAction& binding)
+        {
+            return binding.PendingRemove;
+        }), s_ActionCallbacks.end());
+    }
+
+    void InputRuntime::UnbindAllForOwner(OwnerID owner)
+    {
+        if (owner == InvalidOwnerID)
+            return;
+
+        for (RegisteredInputAction& binding : s_ActionCallbacks)
+        {
+            if (binding.Owner == owner)
+                binding.PendingRemove = true;
+        }
+
+        s_PendingActionCallbackAdds.erase(std::remove_if(s_PendingActionCallbackAdds.begin(), s_PendingActionCallbackAdds.end(), [owner](const RegisteredInputAction& binding)
+        {
+            return binding.Owner == owner;
+        }), s_PendingActionCallbackAdds.end());
+
+        if (s_IsDispatching)
+            return;
+
+        s_ActionCallbacks.erase(std::remove_if(s_ActionCallbacks.begin(), s_ActionCallbacks.end(), [](const RegisteredInputAction& binding)
+        {
+            return binding.PendingRemove;
         }), s_ActionCallbacks.end());
     }
 }

@@ -7,8 +7,13 @@
 namespace Loom
 {
     InputContext::InputContext(std::string name)
-        : m_Name(std::move(name))
+        : m_ID(MakeInputContextID(name)), m_Name(std::move(name))
     {
+    }
+
+    InputContextID InputContext::GetID() const
+    {
+        return m_ID;
     }
 
     const std::string& InputContext::GetName() const
@@ -28,7 +33,7 @@ namespace Loom
 
     bool InputContext::IsValid() const
     {
-        return !m_Name.empty();
+        return m_ID != InvalidInputContextID;
     }
 
     InputContext& InputContext::AddAction(const InputAction& action)

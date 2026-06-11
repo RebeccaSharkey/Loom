@@ -6,6 +6,34 @@
 
 namespace Loom
 {
+    namespace
+    {
+        constexpr uint32 FNV1aOffset = 2166136261u;
+        constexpr uint32 FNV1aPrime = 16777619u;
+
+        uint32 HashName(const std::string& name)
+        {
+            uint32 hash = FNV1aOffset;
+            for (const char character : name)
+            {
+                hash ^= static_cast<uint8>(character);
+                hash *= FNV1aPrime;
+            }
+
+            return hash == 0 ? 1 : hash;
+        }
+    }
+
+    InputActionID MakeInputActionID(const std::string& name)
+    {
+        return name.empty() ? InvalidInputActionID : HashName(name);
+    }
+
+    InputContextID MakeInputContextID(const std::string& name)
+    {
+        return name.empty() ? InvalidInputContextID : HashName(name);
+    }
+
     InputBinding InputBinding::FromKey(KeyCode key, float32 scale, InputValueAxis axis)
     {
         InputBinding binding;

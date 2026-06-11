@@ -7,7 +7,7 @@
 namespace Loom
 {
     InputAction::InputAction(std::string name, InputValueType valueType)
-        : m_Name(std::move(name)), m_ValueType(valueType)
+        : m_ID(MakeInputActionID(name)), m_Name(std::move(name)), m_ValueType(valueType)
     {
     }
 
@@ -28,6 +28,11 @@ namespace Loom
         return m_Name;
     }
 
+    InputActionID InputAction::GetID() const
+    {
+        return m_ID;
+    }
+
     InputValueType InputAction::GetValueType() const
     {
         return m_ValueType;
@@ -40,7 +45,7 @@ namespace Loom
 
     bool InputAction::IsValid() const
     {
-        return !m_Name.empty();
+        return m_ID != InvalidInputActionID;
     }
 
     InputAction& InputAction::Bind(const InputBinding& binding)

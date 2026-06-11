@@ -14,6 +14,7 @@ namespace Loom
         InputContext() = default;
         explicit InputContext(std::string name);
 
+        InputContextID GetID() const;
         const std::string& GetName() const;
         const std::vector<InputAction>& GetActions() const;
         bool IsEnabled() const;
@@ -24,6 +25,7 @@ namespace Loom
         void ClearActions();
 
     private:
+        InputContextID m_ID = InvalidInputContextID;
         std::string m_Name;
         bool m_Enabled = true;
         std::vector<InputAction> m_Actions;
