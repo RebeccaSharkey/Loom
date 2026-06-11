@@ -16,8 +16,9 @@ class LoomSandbox final : public Loom::Application
 
     Loom::InputContext GameplayContext{"Gameplay"};
 
-    Loom::InputVector2 MoveInput{};
-    Loom::InputVector2 LookInput{};
+    Loom::Vector2 MoveInput{};
+    Loom::Vector2 LookInput{};
+
     bool bFireHeld = false;
 
 public:

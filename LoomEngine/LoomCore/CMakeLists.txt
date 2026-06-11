@@ -15,6 +15,15 @@ set(LOOM_CORE_HEADERS
         Include/Core/Time.h
 )
 
+# ----------- Math Module ----------- #
+set(LOOM_MATH_SOURCES
+)
+
+set(LOOM_MATH_HEADERS
+        Include/Math/Math.h
+        Include/Math/MathTypes/Vector2.h
+)
+
 # ----------- Log Module ----------- #
 set(LOOM_LOG_SOURCES
         Source/Log/Log.cpp
@@ -115,6 +124,8 @@ SET(LOOM_MINIMUM_HEADERS
 set(LOOM_ENGINE_SOURCES
         ${LOOM_CORE_SOURCES}
         ${LOOM_CORE_HEADERS}
+        ${LOOM_MATH_SOURCES}
+        ${LOOM_MATH_HEADERS}
         ${LOOM_LOG_SOURCES}
         ${LOOM_LOG_HEADERS}
         ${LOOM_EVENT_SOURCES}

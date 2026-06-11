@@ -7,6 +7,8 @@
 #include "Core/Types.h"
 #include "Core/Time.h"
 
+#include "Math/Math.h"
+
 #include "Events/EventType.h"
 #include "Events/EventMacro.h"
 
@@ -14,6 +16,7 @@
 #include "Input/InputContext.h"
 #include "Input/InputSubsystem.h"
 #include "Input/InputTypes.h"
+
 #include "Input/KeyCodes.h"
 #include "Input/MouseCodes.h"
 

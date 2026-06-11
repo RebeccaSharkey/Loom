@@ -4,6 +4,7 @@
 
 #include "Core/Core.h"
 #include "Core/Types.h"
+#include "Math/Math.h"
 #include "Input/KeyCodes.h"
 #include "Input/MouseCodes.h"
 
@@ -52,12 +53,6 @@ namespace Loom
     using InputBindingHandle = uint64;
     constexpr InputBindingHandle InvalidInputBindingHandle = 0;
 
-    struct LOOM_API InputVector2
-    {
-        float32 X = 0.0f;
-        float32 Y = 0.0f;
-    };
-
     struct LOOM_API InputBinding
     {
         InputBindingType Type = InputBindingType::Key;
@@ -83,7 +78,7 @@ namespace Loom
 
         bool GetBool() const;
         float32 GetFloat() const;
-        InputVector2 GetVector2() const;
+        Vector2 GetVector2() const;
     };
 
     struct LOOM_API InputActionEvent
@@ -95,6 +90,6 @@ namespace Loom
 
         bool GetBool() const;
         float32 GetFloat() const;
-        InputVector2 GetVector2() const;
+        Vector2 GetVector2() const;
     };
 }

@@ -77,7 +77,7 @@ namespace Loom
         return X;
     }
 
-    InputVector2 InputActionValue::GetVector2() const
+    Vector2 InputActionValue::GetVector2() const
     {
         return {X, Y};
     }
@@ -92,7 +92,7 @@ namespace Loom
         return Value.GetFloat();
     }
 
-    InputVector2 InputActionEvent::GetVector2() const
+    Vector2 InputActionEvent::GetVector2() const
     {
         return Value.GetVector2();
     }
