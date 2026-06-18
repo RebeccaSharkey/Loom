@@ -5,15 +5,27 @@
 #include "Log/LogMessage.h"
 #include "Log/LogStack.h"
 
+#include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <cstdarg>
-#include <cstring>
+#include <functional>
 #include <iostream>
+#include <thread>
 
 #include "Log/Sinks/ConsoleSink.h"
 #include "Log/Sinks/FileSink.h"
 
 #ifdef LOOM_PLATFORM_WINDOWS
-#include <Windows.h>
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+
+    #include <Windows.h>
 #endif
 
 namespace Loom
@@ -119,7 +131,7 @@ namespace Loom
 
         // Tag handling (ensure null-terminated and no overrun)
         char tagBuffer[TAG_SIZE];
-        strncpy(tagBuffer, tag, TAG_SIZE);
+        strncpy_s(tagBuffer, tag, TAG_SIZE);
         tagBuffer[TAG_SIZE-1] = '\0';
 
 
@@ -130,7 +142,7 @@ namespace Loom
         {
             constexpr size_t MESSAGE_SIZE = 512;
 
-            size_t bufferRemaining = static_cast<size_t>(bufferEnd - bufferPointer);
+            auto bufferRemaining = static_cast<size_t>(bufferEnd - bufferPointer);
             size_t copyLength = (bufferRemaining < MESSAGE_SIZE - 1) ? bufferRemaining : MESSAGE_SIZE - 1;
 
             //UTF-8 Safe Truncation
@@ -140,7 +152,7 @@ namespace Loom
                 split--;
             }
 
-            size_t safeLength = static_cast<size_t>(split - bufferPointer);
+            auto safeLength = static_cast<size_t>(split - bufferPointer);
             if (safeLength == 0)
             {
                 safeLength = copyLength;

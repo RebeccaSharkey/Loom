@@ -142,6 +142,16 @@ set(LOOM_ENGINE_SOURCES
 # ----------- Create Shared Library ----------- #
 add_library(LoomCore SHARED ${LOOM_ENGINE_SOURCES})
 
+
+target_compile_features(LoomCore PUBLIC cxx_std_20)
+
+if(MSVC)
+    target_compile_options(LoomCore PUBLIC
+            /Zc:preprocessor
+            /permissive-
+    )
+endif()
+
 # Public headers exposed to other projects
 target_include_directories(LoomCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 

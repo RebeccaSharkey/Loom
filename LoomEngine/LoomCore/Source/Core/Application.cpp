@@ -2,6 +2,8 @@
 
 #include "Core/Application.h"
 
+#include <chrono>
+
 #include "Core/Time.h"
 #include "Events/EventDispatcher.h"
 #include "Events/Events/WindowEvents.h"
