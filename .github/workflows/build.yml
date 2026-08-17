@@ -13,11 +13,26 @@ on:
 jobs:
   windows:
     name: Windows (MSVC)
-    runs-on: windows-latest
+    # Pinned, not windows-latest. The msvc preset asks for the "Visual Studio 17
+    # 2022" generator, so the image has to actually ship VS 2022. -latest moves
+    # between images and will eventually stop doing that.
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Toolchain info
+        shell: pwsh
+        run: |
+          cmake --version
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (Test-Path $vswhere) {
+            & $vswhere -products * -format value -property catalog_productLineVersion
+            & $vswhere -products * -format value -property displayName
+          } else {
+            Write-Host "vswhere not found"
+          }
 
       - name: Configure
         run: cmake --preset msvc
