@@ -1,0 +1,41 @@
+name: Build
+
+# The point of this workflow is that a runner starts from nothing every time.
+# A clean clone either builds or it does not — no stale local artifacts to hide
+# a broken build.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows (MSVC)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset msvc
+
+      - name: Build Debug
+        run: cmake --build --preset msvc-debug
+
+      - name: Build Release
+        run: cmake --build --preset msvc-release
+
+      - name: Check output shape
+        shell: pwsh
+        run: |
+          # Static build: no DLLs, no import libraries. Guards against a silent
+          # regression back to SHARED.
+          $bad = Get-ChildItem Build -Recurse -Include *.dll,*.exp -ErrorAction SilentlyContinue
+          if ($bad) {
+            $bad | ForEach-Object { Write-Host "Unexpected artifact: $($_.FullName)" }
+            throw "Static build produced shared-library artifacts"
+          }
+          Get-ChildItem Build -Recurse -Include *.exe,*.lib | ForEach-Object { Write-Host $_.FullName }
