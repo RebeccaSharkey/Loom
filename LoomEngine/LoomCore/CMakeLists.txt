@@ -139,8 +139,8 @@ set(LOOM_ENGINE_SOURCES
         ${LOOM_MINIMUM_HEADERS}
 )
 
-# ----------- Create Shared Library ----------- #
-add_library(LoomCore SHARED ${LOOM_ENGINE_SOURCES})
+# ----------- Create Static Library ----------- #
+add_library(LoomCore STATIC ${LOOM_ENGINE_SOURCES})
 
 
 target_compile_features(LoomCore PUBLIC cxx_std_20)
@@ -155,14 +155,5 @@ endif()
 # Public headers exposed to other projects
 target_include_directories(LoomCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 
-# Private Definitions for this project
-target_compile_definitions(LoomCore PRIVATE LOOM_BUILD_DLL)
-target_compile_definitions(LoomCore PRIVATE $<$<CONFIG:Debug>:LOOM_DEBUG>)
-
-if(WIN32)
-    target_compile_definitions(LoomCore PRIVATE LOOM_PLATFORM_WINDOWS)
-elseif(APPLE)
-    target_compile_definitions(LoomCore PRIVATE LOOM_PLATFORM_MACOS)
-elseif(UNIX)
-    target_compile_definitions(LoomCore PRIVATE LOOM_PLATFORM_LINUX)
-endif()
+# Propagated to everything that links LoomCore
+target_compile_definitions(LoomCore PUBLIC $<$<CONFIG:Debug>:LOOM_DEBUG>)

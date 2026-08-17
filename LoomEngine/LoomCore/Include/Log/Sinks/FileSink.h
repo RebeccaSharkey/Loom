@@ -12,7 +12,7 @@
 
 namespace Loom
 {
-    class LOOM_API FileSink : public ILogSink
+    class FileSink : public ILogSink
     {
     public:
         explicit FileSink(const size_t bufferSize = 128);

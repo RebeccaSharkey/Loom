@@ -8,7 +8,7 @@ namespace Loom
 {
     class Application;
 
-    class LOOM_API Time
+    class Time
     {
         friend class Application;
 

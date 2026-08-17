@@ -24,7 +24,7 @@ namespace Loom
         }
     };
 
-    class LOOM_API Application
+    class Application
     {
         friend int ::main(int argc, char** argv);
         static Application* Instance;

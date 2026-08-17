@@ -11,7 +11,7 @@ namespace Loom
     class ConsoleSink;
     class FileSink;
 
-    class LOOM_API Log
+    class Log
     {
     public:
         static bool Init();

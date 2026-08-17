@@ -11,7 +11,7 @@ namespace Loom
 {
     using InputActionCallback = std::function<void(const InputActionEvent&)>;
 
-    class LOOM_API InputSubsystem
+    class InputSubsystem
     {
     public:
         InputSubsystem() = default;

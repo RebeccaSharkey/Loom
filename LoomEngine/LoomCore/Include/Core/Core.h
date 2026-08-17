@@ -18,19 +18,6 @@
 #endif
 
 //====================
-// DLL BUILD TYPE
-//====================
-#if LOOM_PLATFORM_WINDOWS
-    #ifdef LOOM_BUILD_DLL
-        #define LOOM_API __declspec(dllexport)
-    #else
-        #define LOOM_API __declspec(dllimport)
-    #endif
-#else
-    #define LOOM_API
-#endif
-
-//====================
 // Compiler Detection
 //====================
 #if defined(_MSC_VER)

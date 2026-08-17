@@ -63,10 +63,10 @@ namespace Loom
     using InputContextHandle = uint64;
     constexpr InputContextHandle InvalidInputContextHandle = 0;
 
-    LOOM_API InputActionID MakeInputActionID(const std::string& name);
-    LOOM_API InputContextID MakeInputContextID(const std::string& name);
+    InputActionID MakeInputActionID(const std::string& name);
+    InputContextID MakeInputContextID(const std::string& name);
 
-    struct LOOM_API InputBinding
+    struct InputBinding
     {
         InputBindingType Type = InputBindingType::Key;
         InputDeviceType Device = InputDeviceType::Keyboard;
@@ -83,7 +83,7 @@ namespace Loom
         static InputBinding FromMouseWheelY(float32 scale = 1.0f);
     };
 
-    struct LOOM_API InputActionValue
+    struct InputActionValue
     {
         InputValueType Type = InputValueType::Bool;
         float32 X = 0.0f;
@@ -94,7 +94,7 @@ namespace Loom
         Vector2 GetVector2() const;
     };
 
-    struct LOOM_API InputActionEvent
+    struct InputActionEvent
     {
         const InputAction* Action = nullptr;
         InputTriggerEvent Trigger = InputTriggerEvent::Triggered;

@@ -7,7 +7,7 @@
 
 namespace Loom
 {
-    class LOOM_API IEvent
+    class IEvent
     {
     public:
         virtual ~IEvent() = default;

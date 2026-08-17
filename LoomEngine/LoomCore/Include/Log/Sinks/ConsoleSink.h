@@ -7,7 +7,7 @@
 
 namespace Loom
 {
-    class LOOM_API ConsoleSink : public ILogSink
+    class ConsoleSink : public ILogSink
     {
         public:
             ~ConsoleSink() override;

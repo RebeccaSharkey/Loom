@@ -8,7 +8,7 @@
 
 namespace Loom
 {
-    class LOOM_API InputContext
+    class InputContext
     {
     public:
         InputContext() = default;

@@ -8,7 +8,7 @@
 
 namespace Loom
 {
-    class LOOM_API ILogSink
+    class ILogSink
     {
     public:
         virtual ~ILogSink() = default;

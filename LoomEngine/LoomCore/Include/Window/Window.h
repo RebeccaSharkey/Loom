@@ -24,7 +24,7 @@ namespace Loom
     };
 
     // Interface for desktop window
-    class LOOM_API Window
+    class Window
     {
     public:
         using EventCallbackFn = std::function<void(const IEvent&)>;

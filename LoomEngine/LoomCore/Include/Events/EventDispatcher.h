@@ -33,7 +33,7 @@ namespace Loom
         }
     };
 
-    class LOOM_API EventDispatcher
+    class EventDispatcher
     {
     public:
         template<typename EventT>

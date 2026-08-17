@@ -8,7 +8,7 @@
 
 namespace Loom
 {
-    class LOOM_API InputAction
+    class InputAction
     {
     public:
         InputAction() = default;

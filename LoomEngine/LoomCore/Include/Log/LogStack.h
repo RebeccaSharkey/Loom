@@ -7,7 +7,7 @@
 
 namespace Loom
 {
-    class LOOM_API LogStack
+    class LogStack
     {
         public:
             static void AttachSink(ILogSink* sink);
