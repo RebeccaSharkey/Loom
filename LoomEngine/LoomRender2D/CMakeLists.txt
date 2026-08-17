@@ -1,26 +1,21 @@
-project(LoomRender2D LANGUAGES CXX)
-
-# --- Renderer2D --- #
-set(SOURCES
+# ----------- Render2D Module ----------- #
+set(LOOM_RENDER2D_SOURCES
         Source/Render2D.cpp
 )
 
-set(HEADERS
+set(LOOM_RENDER2D_HEADERS
         Include/Render2D.h
 )
 
-set(LoomRender2D_SOURCES
-        ${SOURCES}
-        ${HEADERS}
+# ----------- Create Static Library ----------- #
+add_library(LoomRender2D STATIC
+        ${LOOM_RENDER2D_SOURCES}
+        ${LOOM_RENDER2D_HEADERS}
 )
+add_library(Loom::Render2D ALIAS LoomRender2D)
 
-add_library(LoomRender2D STATIC ${LoomRender2D_SOURCES})
-
-target_include_directories(LoomRender2D
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include
-)
-
+# PUBLIC: Render2D's headers expose LoomCore types, so consumers need it too.
 target_link_libraries(LoomRender2D PUBLIC LoomCore)
 
-
-target_compile_definitions(LoomRender2D PUBLIC ENABLE_LoomRender2D)
+# Public headers exposed to other projects
+target_include_directories(LoomRender2D PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)

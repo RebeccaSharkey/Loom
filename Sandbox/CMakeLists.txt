@@ -1,10 +1,12 @@
-project(LoomSandbox LANGUAGES CXX)
-
 set(LOOM_SANDBOX_SOURCES
         Source/SandboxApp.cpp
 )
 
 add_executable(LoomSandbox ${LOOM_SANDBOX_SOURCES})
 
-target_link_libraries(LoomSandbox PRIVATE LoomCore)
-target_link_libraries(LoomSandbox PRIVATE LoomRender2D)
+# Linked through the namespaced aliases, which is exactly how a generated game
+# project will consume the installed engine. Keeps Sandbox an honest example.
+target_link_libraries(LoomSandbox PRIVATE
+        Loom::Core
+        Loom::Render2D
+)

@@ -1,5 +1,3 @@
-project(LoomCore LANGUAGES CXX)
-
 # ----------- Core Module ----------- #
 set(LOOM_CORE_SOURCES
         Source/Core/Application.cpp
@@ -114,7 +112,7 @@ set(LOOM_MINIMUM_SOURCES
 
 )
 
-SET(LOOM_MINIMUM_HEADERS
+set(LOOM_MINIMUM_HEADERS
         Include/LoomEngine.h
         Include/EntryPoint.h
 )
@@ -141,10 +139,13 @@ set(LOOM_ENGINE_SOURCES
 
 # ----------- Create Static Library ----------- #
 add_library(LoomCore STATIC ${LOOM_ENGINE_SOURCES})
+add_library(Loom::Core ALIAS LoomCore)
 
-
+# PUBLIC: anything linking LoomCore is compiled as C++20 as well.
 target_compile_features(LoomCore PUBLIC cxx_std_20)
 
+# PUBLIC and deliberate: the LOOM_LOG macros rely on __VA_ARGS__ handling that
+# only the conforming preprocessor gets right, so consumers need this too.
 if(MSVC)
     target_compile_options(LoomCore PUBLIC
             /Zc:preprocessor
