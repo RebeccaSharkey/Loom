@@ -141,6 +141,9 @@ set(LOOM_ENGINE_SOURCES
 add_library(LoomCore STATIC ${LOOM_ENGINE_SOURCES})
 add_library(Loom::Core ALIAS LoomCore)
 
+find_package(SDL3 CONFIG REQUIRED)
+target_link_libraries(LoomCore PRIVATE SDL3::SDL3)
+
 # PUBLIC: anything linking LoomCore is compiled as C++20 as well.
 target_compile_features(LoomCore PUBLIC cxx_std_20)
 
