@@ -18,17 +18,45 @@ jobs:
     # between images and will eventually stop doing that.
     runs-on: windows-2022
 
+    env:
+      # A fixed location for vcpkg's compiled-package cache, so actions/cache
+      # has a known path to save and restore. Without this, SDL3 is rebuilt
+      # from source on every single run.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Point VCPKG_ROOT at the runner's vcpkg
+        shell: pwsh
+        run: |
+          # CMakePresets.json reads $env{VCPKG_ROOT}, but the runner image ships
+          # vcpkg under a differently named variable. Bridge the two.
+          if (-not $env:VCPKG_INSTALLATION_ROOT) {
+            throw "VCPKG_INSTALLATION_ROOT is not set on this image - the workflow needs to clone its own vcpkg"
+          }
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          # Invalidate when the manifest changes; otherwise reuse the built
+          # packages. restore-keys lets a changed manifest still start from the
+          # previous cache rather than from nothing.
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
 
       - name: Toolchain info
         shell: pwsh
         run: |
           cmake --version
+          Write-Host "VCPKG_ROOT = $env:VCPKG_ROOT"
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
           if (Test-Path $vswhere) {
-            & $vswhere -products * -format value -property catalog_productLineVersion
             & $vswhere -products * -format value -property displayName
           } else {
             Write-Host "vswhere not found"
