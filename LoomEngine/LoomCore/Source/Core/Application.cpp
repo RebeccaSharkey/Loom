@@ -7,10 +7,9 @@
 #include "Core/Time.h"
 #include "Events/EventDispatcher.h"
 #include "Events/Events/WindowEvents.h"
-#include "../Input/InputRuntime.h"
 #include "Window/Window.h"
 
-#include <SDL3/SDL.h>
+#include "../Input/InputRuntime.h"
 
 namespace Loom
 {
@@ -25,10 +24,6 @@ namespace Loom
         Instance = this;
 
         // TODO: Set working directory
-
-        const int v = SDL_GetVersion();
-        LOOM_LOG_INFO("Loom", "SDL %d.%d.%d",
-            SDL_VERSIONNUM_MAJOR(v), SDL_VERSIONNUM_MINOR(v), SDL_VERSIONNUM_MICRO(v));
 
         m_Window.reset(Window::Create(spec.WindowSpec));
         LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
