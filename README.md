@@ -29,10 +29,12 @@ What does not exist yet: the renderer, audio, asset loading, scripting.
 
 ## Documentation
 
-| Guide | For |
-|---|---|
-| [Making a Game](Docs/MakingAGame.md) | Installing Loom and starting a game project |
-| [Building the Engine](Docs/BuildingTheEngine.md) | Working on Loom itself, and installing your own changes |
+| Guide                                                | For                                                         |
+|------------------------------------------------------|-------------------------------------------------------------|
+| [Installing the Engine](Docs/InstallingTheEngine.md) | For Installing the latest release of the engine             |
+| [Building the Engine](Docs/BuildingTheEngine.md)     | For working on Loom itself, and installing your own changes |
+| [Making a Game](Docs/MakingAGame.md)                 | Installing Loom and starting a game project                 |
+
 
 ---
 

@@ -7,37 +7,7 @@ lives wherever you like — it does not go inside the engine repository.
 
 ## 1. Install the engine
 
-Two options. Pick one.
-
-### Option A — download a release (no build required)
-
-1. Download `Loom-<version>-win64.zip` from the
-   [Releases page](https://github.com/RebeccaSharkey/Loom/releases).
-2. Extract it somewhere permanent, for example `C:\Loom`.
-3. Set a `LOOM_ROOT` environment variable pointing at that folder:
-
-   ```powershell
-   [Environment]::SetEnvironmentVariable('LOOM_ROOT','C:\Loom','User')
-   ```
-
-4. **Open a new terminal.** Environment variables do not reach programs that are
-   already running, so any terminal or IDE open at this point will not see it.
-
-### Option B — build from source
-
-Follow [Building the Engine](BuildingTheEngine.md). `Tools\Install.bat` builds
-the engine, installs it, and sets `LOOM_ROOT` for you.
-
-### Verify
-
-In a new terminal:
-
-```powershell
-echo $env:LOOM_ROOT
-```
-
-You should see your install path, and that folder should contain `include`,
-`lib` and `third-party`.
+Follow [Installing the Engine](InstallingTheEngine.md).
 
 ---
 
@@ -65,7 +35,6 @@ The project descriptor. `Modules` lists the optional engine modules you want;
 cmake_minimum_required(VERSION 3.25)
 project(MyGame LANGUAGES CXX)
 
-# Read the descriptor to find out which engine modules this game uses.
 include("$ENV{LOOM_ROOT}/lib/cmake/Loom/LoomProject.cmake")
 loom_read_project("${CMAKE_CURRENT_SOURCE_DIR}/MyGame.loomproject" LOOM_MODULES)
 
@@ -111,16 +80,35 @@ into a VS 2026-built game produces link errors that look unrelated to the cause.
 
 ### `Source/main.cpp`
 
-```cpp
-#include "Log/Log.h"
+Template for mane include
 
-int main()
+```cpp
+#include "EntryPoint.h"
+#include "Render2D.h"
+
+class MyGame final : public Loom::Application
 {
-    Loom::Log::Init();
-    LOOM_LOG_NOTICE("MyGame", "Hello from Loom");
-    Loom::Log::Flush();
-    Loom::Log::Shutdown();
-    return 0;
+    public:
+    MyGame()
+        : Application({
+            "MyGame",
+            Loom::WindowSpecification("My Game", 1280, 720, false)}) {}
+
+    void OnStart() override {
+        LOOM_LOG_NOTICE("MyGame", "My Game Started.");
+
+        Loom::Render2D Render2D;
+        Render2D.Test();
+    }
+
+    void OnShutdown() override {
+        LOOM_LOG_NOTICE("MyGame", "My Game Shutdown.");
+    }
+};
+
+Loom::Application* Loom::CreateApplication()
+{
+    return new MyGame();
 }
 ```
 
@@ -141,25 +129,23 @@ profiles, which do not know about `LOOM_ROOT`.
 
 ## Notes
 
-**You never mention SDL3, or vcpkg.** The engine bundles its dependencies inside
-its install, so a game only ever names Loom. If you find yourself needing to
+The engine bundles its dependencies inside its install, so a game only ever names Loom. If you find yourself needing to
 declare an engine dependency, that is a bug in the engine's packaging.
 
-**Modules are enforced at compile time.** Including a header from a module you
-have not listed fails to compile, rather than producing a confusing link error
+Including a header from a module you have not listed fails to compile, rather than producing a link error
 later.
 
-**Logs are written relative to the working directory**, so they appear wherever
+Currently, logs are written relative to the working directory, so they appear wherever
 you launch the executable from — which in CLion is the project root.
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Cause |
-|---|---|
-| `Could not find a package configuration file provided by "Loom"` | `LOOM_ROOT` is unset, or the terminal predates it being set. Open a new terminal. |
-| `Target "Loom::Render2D" not found` | The module is missing from your `.loomproject` `Modules` array. |
-| `LNK2038: mismatch detected for 'RuntimeLibrary'` | Debug and Release are being mixed. Build your game in the same configuration you are linking. |
-| `Cannot open include file` for an engine header | The module owning it is not listed in your descriptor. |
-| Changes to the engine are not visible | An installed engine is a snapshot. Re-run `Tools\Install.bat` in the engine repo. |
+| Symptom | Cause                                                                                                                                    |
+|---|------------------------------------------------------------------------------------------------------------------------------------------|
+| `Could not find a package configuration file provided by "Loom"` | `LOOM_ROOT` is unset, or the terminal predates it being set. Open a new terminal or follow instructions for installing the engine again. |
+| `Target "Loom::Render2D" not found` | The module is missing from your `.loomproject` `Modules` array.                                                                          |
+| `LNK2038: mismatch detected for 'RuntimeLibrary'` | Debug and Release are being mixed. Build your game in the same configuration you are linking.                                            |
+| `Cannot open include file` for an engine header | The module owning it is not listed in your `.loomproject`.                                                                                   |
+| Changes to the engine are not visible | An installed engine is a snapshot. Re-run `Tools\Install.bat` in the engine repo.                                                        |
