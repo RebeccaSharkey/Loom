@@ -1,8 +1,7 @@
 name: Build
 
-# The point of this workflow is that a runner starts from nothing every time.
-# A clean clone either builds or it does not — no stale local artifacts to hide
-# a broken build.
+# A runner starts from nothing every time. A clean clone either builds, installs
+# and is consumable by an external project, or it does not.
 
 on:
   push:
@@ -14,15 +13,12 @@ jobs:
   windows:
     name: Windows (MSVC)
     # Pinned, not windows-latest. The msvc preset asks for the "Visual Studio 17
-    # 2022" generator, so the image has to actually ship VS 2022. -latest moves
-    # between images and will eventually stop doing that.
+    # 2022" generator, so the image has to actually ship VS 2022.
     runs-on: windows-2022
 
     env:
-      # A fixed location for vcpkg's compiled-package cache, so actions/cache
-      # has a known path to save and restore. Without this, SDL3 is rebuilt
-      # from source on every single run.
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+      LOOM_INSTALL_DIR: ${{ github.workspace }}/_install
 
     steps:
       - name: Checkout
@@ -31,8 +27,6 @@ jobs:
       - name: Point VCPKG_ROOT at the runner's vcpkg
         shell: pwsh
         run: |
-          # CMakePresets.json reads $env{VCPKG_ROOT}, but the runner image ships
-          # vcpkg under a differently named variable. Bridge the two.
           if (-not $env:VCPKG_INSTALLATION_ROOT) {
             throw "VCPKG_INSTALLATION_ROOT is not set on this image - the workflow needs to clone its own vcpkg"
           }
@@ -43,9 +37,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/vcpkg_cache
-          # Invalidate when the manifest changes; otherwise reuse the built
-          # packages. restore-keys lets a changed manifest still start from the
-          # previous cache rather than from nothing.
           key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-${{ runner.os }}-
@@ -82,3 +73,47 @@ jobs:
             throw "Static build produced shared-library artifacts"
           }
           Get-ChildItem Build -Recurse -Include *.exe,*.lib | ForEach-Object { Write-Host $_.FullName }
+
+      # ---- Install and prove the engine is consumable ------------------------
+
+      - name: Install engine (Debug + Release)
+        shell: pwsh
+        run: |
+          cmake --install Generated/msvc --prefix "$env:LOOM_INSTALL_DIR" --config Debug
+          cmake --install Generated/msvc --prefix "$env:LOOM_INSTALL_DIR" --config Release
+          echo "LOOM_ROOT=$env:LOOM_INSTALL_DIR" >> $env:GITHUB_ENV
+
+      - name: Verify install layout
+        shell: pwsh
+        run: |
+          # Debug and Release libraries must coexist. Without CMAKE_DEBUG_POSTFIX
+          # the second install silently overwrites the first, and consumers hit
+          # _ITERATOR_DEBUG_LEVEL / RuntimeLibrary link errors.
+          $lib = Join-Path $env:LOOM_INSTALL_DIR "lib"
+          foreach ($f in @('LoomCore.lib','LoomCored.lib','LoomRender2D.lib','LoomRender2Dd.lib')) {
+            if (-not (Test-Path (Join-Path $lib $f))) {
+              throw "Missing $f - Debug and Release libraries are overwriting each other"
+            }
+          }
+          # The engine must ship its own dependencies.
+          $sdl = Join-Path $env:LOOM_INSTALL_DIR "third-party/share/sdl3/SDL3Config.cmake"
+          if (-not (Test-Path $sdl)) { throw "Bundled SDL3 missing from the install" }
+          Write-Host "Install layout OK"
+
+      - name: Build consumer project against the install
+        shell: pwsh
+        working-directory: Tests/InstallSmokeTest
+        run: |
+          cmake --preset msvc
+          cmake --build --preset msvc-debug
+          cmake --build --preset msvc-release
+
+      - name: Run consumer project
+        shell: pwsh
+        working-directory: Tests/InstallSmokeTest
+        run: |
+          foreach ($cfg in @('Debug','Release')) {
+            Write-Host "--- $cfg ---"
+            & ".\Generated\msvc\$cfg\LoomInstallSmokeTest.exe"
+            if ($LASTEXITCODE -ne 0) { throw "$cfg smoke test failed with exit code $LASTEXITCODE" }
+          }
