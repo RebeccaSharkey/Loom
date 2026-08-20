@@ -1,0 +1,91 @@
+name: Release
+
+# Runs only when a version tag is pushed, e.g.:
+#   git tag v0.1.0 && git push origin v0.1.0
+# Builds the engine, installs it, and attaches the install tree to the GitHub
+# Release so people can use Loom without building it themselves.
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and attach an asset to"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package Windows (MSVC)
+    runs-on: windows-2022
+
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+      LOOM_INSTALL_DIR: ${{ github.workspace }}/_install
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Point VCPKG_ROOT at the runner's vcpkg
+        shell: pwsh
+        run: |
+          if (-not $env:VCPKG_INSTALLATION_ROOT) {
+            throw "VCPKG_INSTALLATION_ROOT is not set on this image"
+          }
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Build and install
+        shell: pwsh
+        run: |
+          cmake --preset msvc
+          cmake --build --preset msvc-debug
+          cmake --build --preset msvc-release
+          cmake --install Generated/msvc --prefix "$env:LOOM_INSTALL_DIR" --config Debug
+          cmake --install Generated/msvc --prefix "$env:LOOM_INSTALL_DIR" --config Release
+
+      - name: Verify the package is consumable
+        shell: pwsh
+        env:
+          LOOM_ROOT: ${{ github.workspace }}/_install
+        working-directory: Tests/InstallSmokeTest
+        run: |
+          # Never ship a package that has not been proven to work.
+          cmake --preset msvc
+          cmake --build --preset msvc-debug
+          & ".\Generated\msvc\Debug\LoomInstallSmokeTest.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Packaged engine failed its smoke test" }
+
+      - name: Create archive
+        shell: pwsh
+        run: |
+          $tag = if ("${{ github.event.inputs.tag }}") { "${{ github.event.inputs.tag }}" } else { "${{ github.ref_name }}" }
+          echo "LOOM_TAG=$tag" >> $env:GITHUB_ENV
+          Compress-Archive -Path "$env:LOOM_INSTALL_DIR\*" -DestinationPath "Loom-$tag-win64.zip"
+          Get-Item "Loom-$tag-win64.zip" | ForEach-Object { "{0} ({1:N1} MB)" -f $_.Name, ($_.Length / 1MB) }
+
+      - name: Attach to release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:LOOM_TAG
+          gh release view $tag 2>$null | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --title $tag --generate-notes
+          }
+          gh release upload $tag "Loom-$tag-win64.zip" --clobber

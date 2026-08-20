@@ -1,6 +1,11 @@
 # Loom Engine
 
-**Loom** is a lightweight, high-performance game engine written in modern C++ with Vulkan rendering. It's designed for maximum modularity and scalability, with a strong focus on 2D games and 3D CRPG/TRPGs. Built from scratch to avoid the bloat and overhead of traditional engines, Loom is engineered for developers who care about clean architecture and silky frame rates.
+[![Build](https://github.com/RebeccaSharkey/Loom/actions/workflows/build.yml/badge.svg)](https://github.com/RebeccaSharkey/Loom/actions/workflows/build.yml)
+
+**Loom** is a lightweight 2D game engine written in modern C++. It is built from
+scratch, stays small on purpose, and is designed so that games live in their own
+repositories and consume the engine as an installed package — the way you would
+use any other SDK.
 
 > *Weave your worlds with speed and precision.*
 
@@ -8,75 +13,61 @@
 
 ## Status
 
-This engine is **early in development** and not yet usable.  
-Follow the repo or check back later as systems come online!
+**Early development.** The engine is not yet capable of drawing anything.
+
+What works today:
+
+- Windowing and a fixed application lifecycle (Win32)
+- Event system with typed events and scoped subscriptions
+- Input system with actions, contexts, priorities and 2D axis composition
+- Logging with console and file sinks
+- Install and packaging: games can consume an installed Loom from anywhere on disk
+
+What does not exist yet: the renderer, audio, asset loading, scripting.
 
 ---
 
-## Philosophy
+## Documentation
 
-Loom isn’t just another engine — it's a performance-first, developer-respecting foundation. It doesn’t force systems on you. Instead, you decide what gets built. Whether you're making a small 2D puzzler or a branching dialogue-heavy RPG, Loom scales to your needs without dragging along unused features.
-
----
-
-## Features
-
-- **Written in C++** - using minimal libraries for full control and speed
-- **CMake project generation** - for clean cross-platform builds
-- **Vulkan renderer** - for modern, high-efficiency graphics
+| Guide | For |
+|---|---|
+| [Making a Game](Docs/MakingAGame.md) | Installing Loom and starting a game project |
+| [Building the Engine](Docs/BuildingTheEngine.md) | Working on Loom itself, and installing your own changes |
 
 ---
 
-## Planned
+## Modules
 
-- **Barebones by design** - nothing you don’t need, everything you do
-- **Modular compilation** - only compile the systems you need (2D, 3D, dialogue, ability system, etc.)
-- **Editor coming soon** - full in-engine support for:
-  - Level Editing
-  - Animation Control
-  - Dialogue & Quest systems
-  - Visual Ability & Stat Editor (like GAS, but better)
-  - No-code workflows for non-programmers
+Loom is split into modules. `Core` is always present; everything else is opt-in
+through your project's `.loomproject` descriptor.
 
-- **Future roadmap**:
-  - Linux, Mac, and Mobile support
-  - Console builds (eventually™)
-  - Full IDE-like editor for game creation
+| Module | Contents |
+|---|---|
+| `Loom::Core` | Application, window, input, events, logging, math, time |
+| `Loom::Render2D` | 2D rendering (stub — not yet implemented) |
 
 ---
 
-## Installation & Getting Started
+## Requirements
 
-### Prerequisites
-
-- **CMake** (3.20 or higher recommended)
-- **Python** (required for module modifications and building)
-- **Vulkan SDK** (for rendering)
-
-### Creating a Project
-
-To create a new Loom project, run:
-
-```bash
-CreateGame.bat
-```
-
-This will set up a new project with the necessary structure and build configuration.
+- Windows 10/11
+- Visual Studio 2022 Build Tools (MSVC v143)
+- CMake 3.25 or newer
+- [vcpkg](https://github.com/microsoft/vcpkg) — only needed to *build* the engine,
+  not to use an installed one
 
 ---
 
-## Platforms
+## Third-party dependencies
 
-- Windows (Current)
-- Linux and Mac (Planned)
-- Mobile support (Future)
-- Console support (Eventually)
+Bundled into the engine install, so games never declare them.
+
+| Library | Purpose | Licence |
+|---|---|---|
+| [SDL3](https://www.libsdl.org/) | Window, input, platform, audio backend | Zlib |
 
 ---
 
-## License
+## Licence
 
 Loom is licensed under the [Apache 2.0 License](LICENSE).
-
----
-
