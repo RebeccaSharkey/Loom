@@ -22,6 +22,17 @@ function Assert-SafeTarget([string]$Path) {
     return $full
 }
 
+function Assert-Writable([string]$Path) {
+    try {
+        New-Item -ItemType Directory -Force -Path $Path -ErrorAction Stop | Out-Null
+        $probe = Join-Path $Path ".loom_write_test"
+        New-Item -ItemType File -Force -Path $probe -ErrorAction Stop | Out-Null
+        Remove-Item $probe -Force -ErrorAction Stop
+    } catch {
+        throw "Cannot write to $Path.`nThis usually means it needs administrator rights (C:\Program Files does).`nTry somewhere like C:\Loom, or re-run this installer as administrator."
+    }
+}
+
 Write-Host "=== Loom Engine Installer ===" -ForegroundColor Cyan
 Write-Host ""
 
@@ -44,6 +55,9 @@ if (Test-Path $Prefix) {
     }
     Remove-Item -Recurse -Force $Prefix
 }
+
+# Check permissions before spending several minutes building.
+Assert-Writable $Prefix
 
 Push-Location $RepoRoot
 try {
