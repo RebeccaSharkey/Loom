@@ -140,6 +140,7 @@ set(LOOM_ENGINE_SOURCES
 # ----------- Create Static Library ----------- #
 add_library(LoomCore STATIC ${LOOM_ENGINE_SOURCES})
 add_library(Loom::Core ALIAS LoomCore)
+set_target_properties(LoomCore PROPERTIES EXPORT_NAME Core)
 
 find_package(SDL3 CONFIG REQUIRED)
 target_link_libraries(LoomCore PRIVATE SDL3::SDL3)
@@ -147,8 +148,6 @@ target_link_libraries(LoomCore PRIVATE SDL3::SDL3)
 # PUBLIC: anything linking LoomCore is compiled as C++20 as well.
 target_compile_features(LoomCore PUBLIC cxx_std_20)
 
-# PUBLIC and deliberate: the LOOM_LOG macros rely on __VA_ARGS__ handling that
-# only the conforming preprocessor gets right, so consumers need this too.
 if(MSVC)
     target_compile_options(LoomCore PUBLIC
             /Zc:preprocessor
@@ -157,7 +156,9 @@ if(MSVC)
 endif()
 
 # Public headers exposed to other projects
-target_include_directories(LoomCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
+target_include_directories(LoomCore PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+        $<INSTALL_INTERFACE:include/LoomCore>)
 
 # Propagated to everything that links LoomCore
 target_compile_definitions(LoomCore PUBLIC $<$<CONFIG:Debug>:LOOM_DEBUG>)

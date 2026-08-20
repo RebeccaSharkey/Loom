@@ -12,10 +12,14 @@ add_library(LoomRender2D STATIC
         ${LOOM_RENDER2D_SOURCES}
         ${LOOM_RENDER2D_HEADERS}
 )
+
 add_library(Loom::Render2D ALIAS LoomRender2D)
+set_target_properties(LoomRender2D PROPERTIES EXPORT_NAME Render2D)
 
 # PUBLIC: Render2D's headers expose LoomCore types, so consumers need it too.
 target_link_libraries(LoomRender2D PUBLIC LoomCore)
 
 # Public headers exposed to other projects
-target_include_directories(LoomRender2D PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
+target_include_directories(LoomRender2D PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+        $<INSTALL_INTERFACE:include/LoomRender2D>)
