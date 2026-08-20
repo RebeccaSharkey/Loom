@@ -7,7 +7,6 @@
 #include "LoomEngine.h"
 #include "Events/IEvent.h"
 
-
 namespace Loom
 {
     struct WindowSpecification

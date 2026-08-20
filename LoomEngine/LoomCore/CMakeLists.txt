@@ -79,32 +79,25 @@ set(LOOM_INPUT_HEADERS
 
 # ----------- Window Module ----------- #
 set(LOOM_WINDOW_SOURCES
+    Source/Window/SDLWindow.cpp
 )
 
 set(LOOM_WINDOW_HEADERS
         Include/Window/Window.h
+        Source/Window/SDLWindow.h
 )
 
 # ----------- Platform Module ----------- #
 set(LOOM_PLATFORM_SOURCES)
 
 if(WIN32)
-    list(APPEND LOOM_PLATFORM_SOURCES
-            Source/Platform/Windows/WindowsWindow.h
-            Source/Platform/Windows/WindowsWindow.cpp
-    )
+
 
 elseif(APPLE)
-    list(APPEND LOOM_PLATFORM_SOURCES
-            Source/Platform/MacOS/MacOSWindow.h
-            Source/Platform/MacOS/MacOSWindow.cpp
-    )
+
 
 elseif(UNIX)
-    list(APPEND LOOM_PLATFORM_SOURCES
-            Source/Platform/Linux/LinuxWindow.h
-            Source/Platform/Linux/LinuxWindow.cpp
-    )
+
 endif()
 
 # ----------- Minimum Required ----------- #
