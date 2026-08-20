@@ -79,11 +79,17 @@ set(LOOM_INPUT_HEADERS
 
 # ----------- Window Module ----------- #
 set(LOOM_WINDOW_SOURCES
-    Source/Window/SDLWindow.cpp
 )
 
 set(LOOM_WINDOW_HEADERS
         Include/Window/Window.h
+)
+
+# ----------- Window Module ----------- #
+set(LOOM_SDL_UTILITIES
+        Source/Window/SDLUtilities.cpp
+        Source/Window/SDLUtilities.h
+        Source/Window/SDLWindow.cpp
         Source/Window/SDLWindow.h
 )
 
@@ -125,6 +131,7 @@ set(LOOM_ENGINE_SOURCES
         ${LOOM_INPUT_HEADERS}
         ${LOOM_WINDOW_SOURCES}
         ${LOOM_WINDOW_HEADERS}
+        ${LOOM_SDL_UTILITIES}
         ${LOOM_PLATFORM_SOURCES}
         ${LOOM_MINIMUM_SOURCES}
         ${LOOM_MINIMUM_HEADERS}

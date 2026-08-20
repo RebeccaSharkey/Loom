@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Window/Window.h"
+#include "SDLUtilities.h"
 
 struct SDL_Window;
 
@@ -14,10 +15,14 @@ namespace Loom
         ~SDLWindow();
 
     private:
-        SDL_Window* window = nullptr;
-        EventCallbackFn m_EventCallback;
+        SDL_WindowPtr window;
 
         void CreateSDLWindow(const WindowSpecification &spec);
+
+
+        // --- Event Handling ---
+
+        EventCallbackFn m_EventCallback;
 
         template<typename EventT>
         void DispatchEvent(const EventT& event)

@@ -3,6 +3,8 @@
 #include "Core/Application.h"
 
 #include <chrono>
+#include <memory>
+#include <SDL3/SDL_init.h>
 
 #include "Core/Time.h"
 #include "Events/EventDispatcher.h"
@@ -10,6 +12,7 @@
 #include "Window/Window.h"
 
 #include "../Input/InputRuntime.h"
+#include "../Window/SDLUtilities.h"
 
 
 namespace Loom
@@ -23,6 +26,9 @@ namespace Loom
 
         LOOM_ASSERT(!Instance, "Application already exists");
         Instance = this;
+
+        // Initialises SDL
+        m_Context = std::make_unique<PlatformContext>();
 
         // TODO: Set working directory
 
@@ -45,6 +51,7 @@ namespace Loom
         // TODO: Shutdown Renderer
 
         m_Window.reset();
+        m_Context.reset();
 
         InputRuntime::Shutdown();
         EventDispatcher::UnsubscribeAll();

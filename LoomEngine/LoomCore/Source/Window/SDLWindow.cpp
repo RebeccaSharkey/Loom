@@ -1,7 +1,8 @@
 ﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "SDLWindow.h"
-#include "SDL3/SDL_main.h"
+
+#include "SDL3/SDL.h"
 
 #include "Events/Events/WindowEvents.h"
 
@@ -17,10 +18,6 @@ namespace Loom
     {
         LOOM_LOG_TRACE("SDLWindow", "Creating SDL Window: %s (%ux%u)", spec.Title.c_str(), spec.Width, spec.Height);
 
-        SDL_SetMainReady();
-
-        LOOM_ASSERT(SDL_Init(SDL_INIT_VIDEO), "Failed to Init SDL. Error: %s", SDL_GetError());
-
         CreateSDLWindow(spec);
 
         LOOM_LOG_INFO("SDLWindow", "SDL Window created successfully");
@@ -28,18 +25,13 @@ namespace Loom
 
     SDLWindow::~SDLWindow()
     {
-        LOOM_LOG_TRACE("SDLWindow", "Destroying SDL Window");
-
-        SDL_DestroyWindow(window);
-        window = nullptr;
-
-        SDL_Quit();
+        window.reset();
     }
 
     void SDLWindow::CreateSDLWindow(const WindowSpecification &spec)
     {
-        window = SDL_CreateWindow(spec.Title.c_str(), spec.Width, spec.Height, 0);
-        LOOM_ASSERT(window, "Failed to Create SDL Window. Error: %s", SDL_GetError());
+        window.reset(SDL_CreateWindow(spec.Title.c_str(), spec.Width, spec.Height, 0));
+        LOOM_VERIFY(window.get(), SDL_GetError());
     }
 
     void SDLWindow::OnUpdate()

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "LoomEngine.h"
-#include "Events/EventHandle.h"
 #include "Events/EventMacro.h"
 #include "Window/Window.h"
 
@@ -12,6 +11,7 @@ int main(int argc, char** argv);
 namespace Loom
 {
     class Window;
+    struct PlatformContext;
 
     struct ApplicationSpecification
     {
@@ -42,6 +42,7 @@ namespace Loom
     private:
         bool bIsRunning = true;
         ApplicationSpecification m_Specification;
+        std::unique_ptr<PlatformContext> m_Context;
         std::unique_ptr<Window> m_Window;
 
         void Run();
