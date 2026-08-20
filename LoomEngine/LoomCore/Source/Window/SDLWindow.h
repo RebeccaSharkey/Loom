@@ -1,9 +1,9 @@
 ﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 #pragma once
 
-#include "Window\Window.h"
+#include "Window/Window.h"
 
-#include <SDL3/SDL.h>
+struct SDL_Window;
 
 namespace Loom
 {

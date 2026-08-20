@@ -137,6 +137,7 @@ set_target_properties(LoomCore PROPERTIES EXPORT_NAME Core)
 
 find_package(SDL3 CONFIG REQUIRED)
 target_link_libraries(LoomCore PRIVATE SDL3::SDL3)
+target_compile_definitions(LoomCore PRIVATE SDL_MAIN_HANDLED)
 
 # PUBLIC: anything linking LoomCore is compiled as C++20 as well.
 target_compile_features(LoomCore PUBLIC cxx_std_20)

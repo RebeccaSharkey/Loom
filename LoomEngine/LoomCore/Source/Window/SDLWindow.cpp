@@ -1,6 +1,7 @@
 ﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "SDLWindow.h"
+#include "SDL3/SDL_main.h"
 
 #include "Events/Events/WindowEvents.h"
 
@@ -15,6 +16,8 @@ namespace Loom
     SDLWindow::SDLWindow(const WindowSpecification &spec)
     {
         LOOM_LOG_TRACE("SDLWindow", "Creating SDL Window: %s (%ux%u)", spec.Title.c_str(), spec.Width, spec.Height);
+
+        SDL_SetMainReady();
 
         LOOM_ASSERT(SDL_Init(SDL_INIT_VIDEO), "Failed to Init SDL. Error: %s", SDL_GetError());
 
