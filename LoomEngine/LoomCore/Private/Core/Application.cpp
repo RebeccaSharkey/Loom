@@ -51,8 +51,9 @@ namespace Loom
 
     Application::~Application()
     {
-        // TODO: Shutdown Renderer
         Instance = nullptr;
+
+        // TODO: Shutdown Renderer
 
         m_Window.reset();
         m_PlatformContext.reset();
