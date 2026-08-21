@@ -43,7 +43,7 @@ install(FILES
 )
 
 install(FILES
-        cmake/LoomProject.cmake
+        CMake/LoomProject.cmake
         DESTINATION lib/cmake/Loom
 )
 

@@ -126,10 +126,7 @@ target_compile_definitions(LoomCore PRIVATE SDL_MAIN_HANDLED)
 target_compile_features(LoomCore PUBLIC cxx_std_20)
 
 if(MSVC)
-    target_compile_options(LoomCore PUBLIC
-            /Zc:preprocessor
-            /permissive-
-    )
+    target_compile_options(LoomCore PUBLIC /Zc:preprocessor)
 endif()
 
 # Public headers exposed to other projects
