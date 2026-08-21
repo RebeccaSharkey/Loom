@@ -11,6 +11,11 @@ namespace Loom
     class ILogSink
     {
     public:
+        ILogSink() = default;
+        ILogSink(const ILogSink&) = delete;
+        ILogSink& operator=(const ILogSink&) = delete;
+        ILogSink(ILogSink&&) = delete;
+        ILogSink& operator=(ILogSink&&) = delete;
         virtual ~ILogSink() = default;
 
         virtual bool Init (bool bInitEnabled, LogLevel minLogLevel = LogLevel::Quiet);
@@ -29,7 +34,7 @@ namespace Loom
 
     public:
         virtual void SetMinLogLevel(const LogLevel level) { MinLogLevel = level; }
-        virtual bool AllowedLogLevel(const LogLevel level) const { return level >= MinLogLevel; }
+        [[nodiscard]] virtual bool AllowedLogLevel(const LogLevel level) const { return level >= MinLogLevel; }
 
     protected:
         [[nodiscard]] virtual const char* GetLogLevelString(LogLevel level) const;

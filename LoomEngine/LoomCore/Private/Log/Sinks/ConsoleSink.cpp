@@ -17,7 +17,7 @@ namespace Loom
 
     void ConsoleSink::Log(const LogMessage &message)
     {
-        if (!IsEnabled() || !AllowedLogLevel(message.LogLevel))
+        if (!IsEnabled() || !AllowedLogLevel(message.Level))
         {
             return;
         }
@@ -25,12 +25,12 @@ namespace Loom
         std::lock_guard lock(OutputMutex);
 
         //Format Timestamp
-        char timeBuffer[32];
+        char timeBuffer[32]{};
         std::snprintf(timeBuffer, sizeof(timeBuffer), "%llu", static_cast<unsigned long long>(message.Timestamp));
-        const char* level = GetLogLevelString(message.LogLevel);
+        const char* level = GetLogLevelString(message.Level);
 
         // Get LogLevel as a string and the output colour attached to that LogLevel
-        const char* colour = GetLogLevelColour(message.LogLevel);
+        const char* colour = GetLogLevelColour(message.Level);
 
         // Format and print full line
         std::printf(
@@ -42,13 +42,15 @@ namespace Loom
             message.Message
         );
 
-        Flush();
+        if (message.Level >= LogLevel::Warning)
+        {
+            Flush();
+        }
     }
 
     void ConsoleSink::Flush()
     {
         std::fflush(stdout);
-        std::fflush(stderr);
     }
 
     const char * ConsoleSink::GetLogLevelColour(const LogLevel level) const

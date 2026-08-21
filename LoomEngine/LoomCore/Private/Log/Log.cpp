@@ -9,9 +9,11 @@
 #include <atomic>
 #include <chrono>
 #include <cstdarg>
+#include <cstring>
 #include <functional>
 #include <iostream>
 #include <thread>
+#include <utility>
 
 #include "Log/Sinks/ConsoleSink.h"
 #include "Log/Sinks/FileSink.h"
@@ -31,79 +33,72 @@
 namespace Loom
 {
     static std::atomic<bool> bLogInitialized = false;
+    std::unique_ptr<ConsoleSink> Log::s_ConsoleSink;
+    std::unique_ptr<FileSink>    Log::s_FileSink;
 
-    ConsoleSink* Log::m_ConsoleSink = nullptr;
-    FileSink* Log::m_FileSink = nullptr;
-
-    void EnableVirtualTerminalMode()
+    namespace
     {
-#ifdef LOOM_PLATFORM_WINDOWS
-        HANDLE outputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD doubleWordMode = 0;
-        if (outputHandle == INVALID_HANDLE_VALUE || !GetConsoleMode(outputHandle, &doubleWordMode))
+        void EnableVirtualTerminalMode()
         {
-            return;
-        }
-        doubleWordMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        SetConsoleMode(outputHandle, doubleWordMode);
+#ifdef LOOM_PLATFORM_WINDOWS
+            HANDLE outputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+            DWORD doubleWordMode = 0;
+            if (outputHandle == INVALID_HANDLE_VALUE || !GetConsoleMode(outputHandle, &doubleWordMode))
+            {
+                return;
+            }
+            doubleWordMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+            SetConsoleMode(outputHandle, doubleWordMode);
 #endif
+        }
     }
 
     bool Log::Init()
     {
-        if (bLogInitialized.exchange(true))
+        if (bLogInitialized.load())
         {
             return true;
         }
 
-        m_ConsoleSink = new ConsoleSink();
-        if (m_ConsoleSink->Init(true))
-        {
-            LogStack::AttachSink(m_ConsoleSink);
-            LOOM_LOG_QUIET("Log", "Console Log Sink Initiated");
-        }
-        else
-        {
-            std::cerr << "Failed to initialize Console Sink." << std::endl;
-            return false;
-        }
-
-        m_FileSink = new FileSink();
-        if (m_FileSink->Init(true, LogLevel::Debug))
-        {
-            LogStack::AttachSink(m_FileSink);
-            LOOM_LOG_QUIET("Log", "File Log Sink Initiated");
-        }
-        else
-        {
-            std::cerr << "Failed to initialize File Sink." << std::endl;
-            return false;
-        }
-
         EnableVirtualTerminalMode();
 
+        auto consoleSink = std::make_unique<ConsoleSink>();
+        if (!consoleSink->Init(true))
+        {
+            std::fprintf(stderr, "Loom: Console Sink Initialisation Failed\n");
+            return false;
+        }
+
+        auto fileSink = std::make_unique<FileSink>();
+        if (!fileSink->Init(true, LogLevel::Debug))
+        {
+            std::fprintf(stderr, "Loom: File Sink Initialisation Failed\n");
+            return false;
+        }
+
+        LogStack::AttachSink(consoleSink.get());
+        LogStack::AttachSink(fileSink.get());
+        s_ConsoleSink = std::move(consoleSink);
+        s_FileSink = std::move(fileSink);
+
+        bLogInitialized.store(true);
         return true;
     }
 
     void Log::Shutdown()
     {
-        if (m_ConsoleSink)
-        {
-            m_ConsoleSink->Shutdown();
-            delete m_ConsoleSink;
-            m_ConsoleSink = nullptr;
-        }
-
-        if (m_FileSink)
-        {
-            m_FileSink->Shutdown();
-            delete m_FileSink;
-            m_FileSink = nullptr;
-        }
+        s_ConsoleSink.reset();
+        s_FileSink.reset();
+        bLogInitialized.store(false);
     }
 
     void Log::Write(const LogLevel logLevel, const char *tag, const char *message, ...)
     {
+        if (!bLogInitialized.load(std::memory_order_acquire))
+        {
+            return;
+        }
+
         if (!tag || !message)
         {
             return;
@@ -130,8 +125,8 @@ namespace Loom
         tempBuffer[messageLength] = '\0';
 
         // Tag handling (ensure null-terminated and no overrun)
-        char tagBuffer[TAG_SIZE];
-        strncpy_s(tagBuffer, tag, TAG_SIZE);
+        char tagBuffer[TAG_SIZE]{};
+        std::snprintf(tagBuffer, TAG_SIZE, "%s", tag);
         tagBuffer[TAG_SIZE-1] = '\0';
 
 
@@ -159,7 +154,7 @@ namespace Loom
             }
 
             LogMessage log{};
-            log.LogLevel = logLevel;
+            log.Level = logLevel;
             log.Timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::system_clock::now().time_since_epoch()).count();
             std::memcpy(log.Tag, tagBuffer, TAG_SIZE);

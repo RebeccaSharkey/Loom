@@ -24,12 +24,8 @@ namespace Loom
         static void Flush();
 
     private:
-        static ConsoleSink* m_ConsoleSink;
-        static FileSink* m_FileSink;
-
-    public:
-        static ConsoleSink* GetConsoleSink() { return m_ConsoleSink;};
-        static FileSink* GetFileSink() { return m_FileSink;};
+        static std::unique_ptr<ConsoleSink> s_ConsoleSink;
+        static std::unique_ptr<FileSink>    s_FileSink;
     };
 }
 

@@ -6,6 +6,7 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <utility>
 
 #ifdef LOOM_PLATFORM_WINDOWS
 #include <direct.h>
@@ -18,8 +19,9 @@ namespace Loom
     static constexpr uint64_t FLUSH_INTERVAL_MS = 1000;
 
     FileSink::FileSink(const size_t bufferSize):
-        BufferSize(bufferSize),
-        LogBuffer(std::make_unique<LogMessage[]>(bufferSize))
+        BufferSize(bufferSize < 1 ? 1 : bufferSize),
+        FlushThreshold(BufferSize < 2 ? 1 : BufferSize / 2),
+        LogBuffer(std::make_unique<LogMessage[]>(BufferSize))
     {
 
     }
@@ -50,10 +52,17 @@ namespace Loom
 
         // Generate Filename
         const time_t now = time(nullptr);
-        const tm* timeInfo = localtime(&now);
+        std::tm localTime{};
+
+#ifdef LOOM_PLATFORM_WINDOWS
+        if (localtime_s(&localTime, &now) != 0) return false;
+#else
+        if (!localtime_r(&now, &localTime)) return false;
+#endif
+
         snprintf(LogFileName, sizeof(LogFileName), "Logs/Log--%02d-%02d-%04d--%02d-%02d-%02d.log",
-                 timeInfo->tm_mday, timeInfo->tm_mon + 1, timeInfo->tm_year + 1900,
-                 timeInfo->tm_hour, timeInfo->tm_min, timeInfo->tm_sec);
+                 localTime.tm_mday, localTime.tm_mon + 1, localTime.tm_year + 1900,
+                 localTime.tm_hour, localTime.tm_min, localTime.tm_sec);
 
         // Try to open/create the file
         FileHandle = fopen(LogFileName, "a");
@@ -72,11 +81,13 @@ namespace Loom
 
     void FileSink::Shutdown()
     {
-        // Request Shutdown
-        bShutdownRequested = true;
+        {
+            std::lock_guard lock(FlushMutex);
+            bShutdownRequested = true;
+        }
 
-        // Notify the flush thread
         FlushCV.notify_one();
+
         if (FlushThread.joinable())
         {
             // Wait for the background thread to finish
@@ -99,25 +110,28 @@ namespace Loom
 
     void FileSink::Log(const LogMessage &message)
     {
-        if (!IsEnabled() || !AllowedLogLevel(message.LogLevel))
+        if (!IsEnabled() || !AllowedLogLevel(message.Level))
         {
             return;
         }
 
-        size_t previousCount = UnflushedCount.fetch_add(1, std::memory_order_acq_rel);
-
-        if (previousCount >= BufferSize)
+        bool bShouldNotify = false;
         {
-            UnflushedCount.fetch_sub(1, std::memory_order_relaxed);
-            DroppedCount.fetch_add(1, std::memory_order_relaxed);
-            FlushCV.notify_one();
-            return;
+            std::lock_guard<std::mutex> lock(FlushMutex);
+            if (UnflushedCount >= BufferSize)
+            {
+                ++DroppedCount;
+            }
+            else
+            {
+                LogBuffer[CurrentIndex++ % BufferSize] = message;
+                ++UnflushedCount;
+            }
+            bShouldNotify = UnflushedCount >= FlushThreshold;
         }
 
-        const size_t index = CurrentIndex.fetch_add(1, std::memory_order_relaxed) % BufferSize;
-        LogBuffer[index] = message;
 
-        if (previousCount + 1 >= BufferSize / 2)
+        if (bShouldNotify)
         {
             FlushCV.notify_one();
         }
@@ -136,10 +150,10 @@ namespace Loom
             std::unique_lock lock(FlushMutex);
             FlushCV.wait_for(lock, std::chrono::milliseconds(FLUSH_INTERVAL_MS), [this]
                         {
-                            return bShutdownRequested || UnflushedCount.load() >= BufferSize;
+                            return bShutdownRequested || UnflushedCount >= FlushThreshold;
                         });
 
-            if (UnflushedCount.load() > 0)
+            if (UnflushedCount > 0)
             {
                 FlushInternal();
             }
@@ -153,8 +167,8 @@ namespace Loom
             return;
         }
 
-        const size_t start = LastFlushedIndex.load(std::memory_order_acquire);
-        const size_t end = CurrentIndex.load(std::memory_order_acquire);
+        const size_t start = LastFlushedIndex;
+        const size_t end = CurrentIndex;
 
         if (start == end)
         {
@@ -171,7 +185,7 @@ namespace Loom
                 continue;
             }
 
-            const char* levelStr = GetLogLevelString(log.LogLevel);
+            const char* levelStr = GetLogLevelString(log.Level);
 
             fprintf(FileHandle, "[%013llu][%-8s][%-12s] %s\n",
                     static_cast<unsigned long long>(log.Timestamp),
@@ -181,10 +195,10 @@ namespace Loom
         }
 
         fflush(FileHandle);
-        LastFlushedIndex.store(end, std::memory_order_release);
-        UnflushedCount.store(0, std::memory_order_relaxed);
+        LastFlushedIndex = end;
+        UnflushedCount = 0;
 
-        const size_t dropped = DroppedCount.exchange(0, std::memory_order_relaxed);
+        const size_t dropped = std::exchange(DroppedCount, 0);
         if (dropped > 0)
         {
             fprintf(FileHandle, "[%013llu][%-8s][%-12s] Dropped %zu log messages due to buffer overflow\n",

@@ -3,16 +3,17 @@
 #pragma once
 
 #include "LogLevels.h"
+#include "Core/Types.h"
 
 namespace Loom
 {
     struct alignas(64) LogMessage
     {
-        LogLevel LogLevel;
+        LogLevel Level;
         char Message[512];
         char Tag[32];
-        uint64_t Timestamp;
-        uint32_t ThreadID;
+        uint64 Timestamp;
+        uint32 ThreadID;
     };
 }
 

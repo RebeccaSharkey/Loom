@@ -25,11 +25,13 @@ namespace Loom
         char LogFileName[128]{};
 
         size_t BufferSize;
+        size_t FlushThreshold;
+
         std::unique_ptr<LogMessage[]> LogBuffer;
-        std::atomic<size_t> CurrentIndex{0};
-        std::atomic<size_t> LastFlushedIndex{0};
-        std::atomic<size_t> UnflushedCount{0};
-        std::atomic<size_t> DroppedCount{0};
+        size_t CurrentIndex{0};
+        size_t LastFlushedIndex{0};
+        size_t UnflushedCount{0};
+        size_t DroppedCount{0};
 
         std::thread FlushThread;
         std::mutex FlushMutex;
