@@ -37,13 +37,16 @@ namespace Loom
             : Handle(std::move(handle)) {};
 
         ScopedEventHandle(ScopedEventHandle&& other) noexcept
-                    : Handle(std::move(other.Handle)) {};
+        {
+            other.Handle.Invalidate();
+        };
         ScopedEventHandle& operator=(ScopedEventHandle&& other) noexcept
         {
             if (this != &other)
             {
                 Unsubscribe();
-                Handle = std::move(other.Handle);
+                Handle = other.Handle;
+                other.Handle.Invalidate();
             }
             return *this;
         }

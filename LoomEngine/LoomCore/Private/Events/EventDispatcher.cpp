@@ -67,12 +67,25 @@ namespace Loom
 
     void EventDispatcher::InternalBroadcast(EventID id, const void* data)
     {
-        std::shared_lock lock(s_ListenerMutex);
-        auto it = s_EventListeners.find(id);
-        if (it != s_EventListeners.end())
+        std::vector<EventCallbackFn> toCall;
         {
-            for (const auto& [_, listener] : it->second.Listeners)
-                listener.Callback(data);
+            std::shared_lock lock(s_ListenerMutex);
+            auto it = s_EventListeners.find(id);
+            if (it == s_EventListeners.end())
+            {
+                return;
+            }
+
+            toCall.reserve(it->second.Listeners.size());
+            for (const auto& [listenerID, listener] : it->second.Listeners)
+            {
+                toCall.push_back(listener.Callback);
+            }
+        }
+
+        for (const auto& callback : toCall)
+        {
+            callback(data);
         }
     }
 

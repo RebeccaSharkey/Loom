@@ -14,9 +14,6 @@
 
 namespace Loom
 {
-    using EventCallbackFn = std::function<void(const void*)>;
-    using ListenerID = size_t;
-
     // Type-erased event storage for queued events
     struct QueuedEvent
     {
@@ -35,6 +32,9 @@ namespace Loom
 
     class EventDispatcher
     {
+        using EventCallbackFn = std::function<void(const void*)>;
+        using ListenerID = size_t;
+
     public:
         template<typename EventT>
         static EventHandle Subscribe(std::function<void(const EventT&)> callback, OwnerID owner);
