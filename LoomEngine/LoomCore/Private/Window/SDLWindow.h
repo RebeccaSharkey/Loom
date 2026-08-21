@@ -2,12 +2,13 @@
 #pragma once
 
 #include "Window/Window.h"
-#include "SDLUtilities.h"
 
-struct SDL_Window;
+#include "../Utilities/PlatformUtils.h"
 
 namespace Loom
 {
+    struct SDL_Window;
+
     class SDLWindow final : public Window
     {
     public:
@@ -15,7 +16,7 @@ namespace Loom
         ~SDLWindow();
 
     private:
-        SDL_WindowPtr window;
+        SDLWindowPtr window;
 
         void CreateSDLWindow(const WindowSpecification &spec);
 

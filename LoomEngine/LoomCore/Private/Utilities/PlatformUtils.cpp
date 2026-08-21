@@ -1,6 +1,6 @@
 ﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 
-#include "SDLUtilities.h"
+#include "PlatformUtils.h"
 
 #include "Core/Assert.h"
 
@@ -20,7 +20,7 @@ Loom::PlatformContext::~PlatformContext()
     LOOM_LOG_QUIET("Platform", "Platform shut down" );
 }
 
-void Loom::SDL_Destroyer::operator()(SDL_Window* window) const
+void Loom::PlatformDestroyer::operator()(SDL_Window* window) const
 {
     if (window)
     {

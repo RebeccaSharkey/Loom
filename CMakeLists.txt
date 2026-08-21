@@ -22,7 +22,7 @@ install(TARGETS LoomCore       EXPORT LoomCoreTargets)
 install(TARGETS LoomRender2D   EXPORT LoomRender2DTargets)
 
 # Install the headers
-install(DIRECTORY LoomEngine/LoomCore/Include/          DESTINATION include/LoomCore FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY LoomEngine/LoomCore/Public/          DESTINATION include/LoomCore FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY LoomEngine/LoomRender2D/Include/      DESTINATION include/LoomRender2D FILES_MATCHING PATTERN "*.h")
 
 # Creates the package

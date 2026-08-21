@@ -2,18 +2,20 @@
 
 #include "Core/Application.h"
 
+// Dependencies
 #include <chrono>
 #include <memory>
 #include <SDL3/SDL_init.h>
 
+// Public Sources
 #include "Core/Time.h"
 #include "Events/EventDispatcher.h"
 #include "Events/Events/WindowEvents.h"
 #include "Window/Window.h"
 
+// Private Sources
 #include "../Input/InputRuntime.h"
-#include "../Window/SDLUtilities.h"
-
+#include "../Utilities/PlatformUtils.h"
 
 namespace Loom
 {

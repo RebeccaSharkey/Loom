@@ -1,7 +1,7 @@
 ﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
+
 #pragma once
 
-#include "Core/Types.h"
 #include <memory>
 
 struct SDL_Window;
@@ -17,10 +17,10 @@ namespace Loom
         PlatformContext& operator=(const PlatformContext&) = delete;
     };
 
-    struct SDL_Destroyer
+    struct PlatformDestroyer
     {
         void operator()(SDL_Window* window) const;
     };
 
-    typedef std::unique_ptr<SDL_Window, SDL_Destroyer> SDL_WindowPtr;
+    typedef std::unique_ptr<SDL_Window, PlatformDestroyer> SDLWindowPtr;
 }

@@ -8,7 +8,6 @@
 
 namespace Loom
 {
-
     Window *Window::Create(const WindowSpecification &spec)
     {
         return new SDLWindow(spec);

@@ -1,100 +1,87 @@
 # ----------- Core Module ----------- #
-set(LOOM_CORE_SOURCES
-        Source/Core/Application.cpp
-        Source/Core/Assert.cpp
-        Source/Core/Time.cpp
-)
+set(LOOMCORE_CORE_SOURCES
+        Public/Core/Core.h
+        Public/Core/Application.h
+        Public/Core/Assert.h
+        Public/Core/Types.h
+        Public/Core/Time.h
 
-set(LOOM_CORE_HEADERS
-        Include/Core/Core.h
-        Include/Core/Application.h
-        Include/Core/Assert.h
-        Include/Core/Types.h
-        Include/Core/Time.h
+        Private/Core/Application.cpp
+        Private/Core/Assert.cpp
+        Private/Core/Time.cpp
 )
 
 # ----------- Math Module ----------- #
-set(LOOM_MATH_SOURCES
-)
-
-set(LOOM_MATH_HEADERS
-        Include/Math/Math.h
-        Include/Math/MathTypes/Vector2.h
+set(LOOMCORE_MATH_SOURCES
+        Public/Math/Math.h
+        Public/Math/MathTypes/Vector2.h
 )
 
 # ----------- Log Module ----------- #
-set(LOOM_LOG_SOURCES
-        Source/Log/Log.cpp
-        Source/Log/LogStack.cpp
-        Source/Log/Sinks/ILogSink.cpp
-        Source/Log/Sinks/ConsoleSink.cpp
-        Source/Log/Sinks/FileSink.cpp
-)
+set(LOOMCORE_LOG_SOURCES
+        Public/Log/LogMessage.h
+        Public/Log/LogLevels.h
+        Public/Log/Log.h
+        Public/Log/LogStack.h
+        Public/Log/Sinks/ILogSink.h
+        Public/Log/Sinks/ConsoleSink.h
+        Public/Log/Sinks/FileSink.h
 
-set(LOOM_LOG_HEADERS
-        Include/Log/LogMessage.h
-        Include/Log/LogLevels.h
-        Include/Log/Log.h
-        Include/Log/LogStack.h
-        Include/Log/Sinks/ILogSink.h
-        Include/Log/Sinks/ConsoleSink.h
-        Include/Log/Sinks/FileSink.h
+        Private/Log/Log.cpp
+        Private/Log/LogStack.cpp
+        Private/Log/Sinks/ILogSink.cpp
+        Private/Log/Sinks/ConsoleSink.cpp
+        Private/Log/Sinks/FileSink.cpp
 )
 
 # ----------- Event Module ----------- #
-set(LOOM_EVENT_SOURCES
-        Source/Events/EventDispatcher.cpp
-)
+set(LOOMCORE_EVENT_SOURCES
+        Public/Events/IEvent.h
+        Public/Events/EventType.h
+        Public/Events/EventDispatcher.h
+        Public/Events/EventHandle.h
+        Public/Events/EventMacro.h
 
-set(LOOM_EVENT_HEADERS
-        Include/Events/IEvent.h
-        Include/Events/EventType.h
-        Include/Events/EventDispatcher.h
-        Include/Events/EventHandle.h
-        Include/Events/EventMacro.h
+        Public/Events/Events/WindowEvents.h
+        Public/Events/Events/KeyEvents.h
+        Public/Events/Events/MouseEvents.h
 
-        Include/Events/Events/WindowEvents.h
-        Include/Events/Events/KeyEvents.h
-        Include/Events/Events/MouseEvents.h
+        Private/Events/EventDispatcher.cpp
 )
 
 # ----------- Input Module ----------- #
-set(LOOM_INPUT_SOURCES
-        Source/Input/InputAction.cpp
-        Source/Input/InputContext.cpp
-        Source/Input/InputRuntime.cpp
-        Source/Input/InputSubsystem.cpp
-        Source/Input/InputTypes.cpp
-)
+set(LOOMCORE_INPUT_SOURCES
+        Public/Input/InputAction.h
+        Public/Input/InputContext.h
+        Public/Input/InputSubsystem.h
+        Public/Input/InputTypes.h
+        Public/Input/KeyCodes.h
+        Public/Input/MouseCodes.h
+        Private/Input/InputRuntime.h
 
-set(LOOM_INPUT_HEADERS
-        Include/Input/InputAction.h
-        Include/Input/InputContext.h
-        Include/Input/InputSubsystem.h
-        Include/Input/InputTypes.h
-        Include/Input/KeyCodes.h
-        Include/Input/MouseCodes.h
-        Source/Input/InputRuntime.h
-)
-
-# ----------- Window Module ----------- #
-set(LOOM_WINDOW_SOURCES
-)
-
-set(LOOM_WINDOW_HEADERS
-        Include/Window/Window.h
+        Private/Input/InputAction.cpp
+        Private/Input/InputContext.cpp
+        Private/Input/InputRuntime.cpp
+        Private/Input/InputSubsystem.cpp
+        Private/Input/InputTypes.cpp
 )
 
 # ----------- Window Module ----------- #
-set(LOOM_SDL_UTILITIES
-        Source/Window/SDLUtilities.cpp
-        Source/Window/SDLUtilities.h
-        Source/Window/SDLWindow.cpp
-        Source/Window/SDLWindow.h
+set(LOOMCORE_WINDOW_SOURCES
+        Public/Window/Window.h
+
+        Private/Window/SDLWindow.cpp
+        Private/Window/SDLWindow.h
+)
+
+# ----------- Utilities Module ----------- #
+set(LOOMCORE_UTILITIES_SOURCES
+        Private/Utilities/PlatformUtils.cpp
+        Private/Utilities/PlatformUtils.h
 )
 
 # ----------- Platform Module ----------- #
-set(LOOM_PLATFORM_SOURCES)
+set(LOOMCORE_PLATFORM_SOURCES)
 
 if(WIN32)
 
@@ -107,34 +94,23 @@ elseif(UNIX)
 endif()
 
 # ----------- Minimum Required ----------- #
-set(LOOM_MINIMUM_SOURCES
-
-)
-
-set(LOOM_MINIMUM_HEADERS
-        Include/LoomEngine.h
-        Include/EntryPoint.h
+set(LOOMCORE_MINIMUM_SOURCES
+        Public/LoomEngine.h
+        Public/EntryPoint.h
 )
 
 # ----------- MASTER SOURCE LIST ----------- #
 
 set(LOOM_ENGINE_SOURCES
-        ${LOOM_CORE_SOURCES}
-        ${LOOM_CORE_HEADERS}
-        ${LOOM_MATH_SOURCES}
-        ${LOOM_MATH_HEADERS}
-        ${LOOM_LOG_SOURCES}
-        ${LOOM_LOG_HEADERS}
-        ${LOOM_EVENT_SOURCES}
-        ${LOOM_EVENT_HEADERS}
-        ${LOOM_INPUT_SOURCES}
-        ${LOOM_INPUT_HEADERS}
-        ${LOOM_WINDOW_SOURCES}
-        ${LOOM_WINDOW_HEADERS}
-        ${LOOM_SDL_UTILITIES}
-        ${LOOM_PLATFORM_SOURCES}
-        ${LOOM_MINIMUM_SOURCES}
-        ${LOOM_MINIMUM_HEADERS}
+        ${LOOMCORE_MINIMUM_SOURCES}
+        ${LOOMCORE_CORE_SOURCES}
+        ${LOOMCORE_MATH_SOURCES}
+        ${LOOMCORE_LOG_SOURCES}
+        ${LOOMCORE_EVENT_SOURCES}
+        ${LOOMCORE_INPUT_SOURCES}
+        ${LOOMCORE_WINDOW_SOURCES}
+        ${LOOMCORE_UTILITIES_SOURCES}
+        ${LOOMCORE_PLATFORM_SOURCES}
 )
 
 # ----------- Create Static Library ----------- #
@@ -158,7 +134,7 @@ endif()
 
 # Public headers exposed to other projects
 target_include_directories(LoomCore PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Public>
         $<INSTALL_INTERFACE:include/LoomCore>)
 
 # Propagated to everything that links LoomCore
