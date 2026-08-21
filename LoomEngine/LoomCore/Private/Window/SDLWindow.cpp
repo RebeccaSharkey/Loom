@@ -1,10 +1,9 @@
 ﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "SDLWindow.h"
-
 #include "SDL3/SDL.h"
-
 #include "Events/Events/WindowEvents.h"
+
 
 namespace Loom
 {
@@ -29,6 +28,11 @@ namespace Loom
 
     void SDLWindow::CreateSDLWindow(const WindowSpecification &spec)
     {
+        if (spec.EventCallback)
+        {
+            m_EventCallback = spec.EventCallback;
+        }
+
         window.reset(SDL_CreateWindow(spec.Title.c_str(), spec.Width, spec.Height, 0));
         LOOM_VERIFY(window.get(), SDL_GetError());
     }
@@ -45,6 +49,7 @@ namespace Loom
         {
             switch (event.type)
             {
+
                 case SDL_EVENT_QUIT:
                     DispatchEvent(WindowCloseEvent());
                     break;
@@ -63,9 +68,24 @@ namespace Loom
         }
     }
 
+    void SDLWindow::SetEventCallback(EventCallbackFn callback)
+    {
+        m_EventCallback = callback;
+    }
+
+    void SDLWindow::SetWidth(uint32 width)
+    {
+
+    }
+
     uint32 SDLWindow::GetWidth() const
     {
         return 0;
+    }
+
+    void SDLWindow::SetHeight(uint32 height)
+    {
+
     }
 
     uint32 SDLWindow::GetHeight() const

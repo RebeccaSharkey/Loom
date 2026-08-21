@@ -5,10 +5,10 @@
 // Dependencies
 #include <chrono>
 #include <memory>
-#include <SDL3/SDL_init.h>
 
 // Public Sources
 #include "Core/Time.h"
+#include "Events/IEvent.h"
 #include "Events/EventDispatcher.h"
 #include "Events/Events/WindowEvents.h"
 #include "Window/Window.h"
@@ -21,29 +21,30 @@ namespace Loom
 {
     Application* Application::Instance = nullptr;
 
-    Application::Application(const ApplicationSpecification& spec)
-        : m_Specification(spec)
+    Application::Application(const ApplicationSpecification &spec)
+        :m_Specification(spec)
     {
+        // TODO: Set working directory
+
+        LOOM_VERIFY(Log::Init(), "Logging initialization failed");
+
         LOOM_LOG_NOTICE("Loom", "Starting Loom Engine...");
 
         LOOM_ASSERT(!Instance, "Application already exists");
         Instance = this;
 
-        // Initialises SDL
-        m_Context = std::make_unique<PlatformContext>();
+        m_PlatformContext = std::make_unique<PlatformContext>();
 
-        // TODO: Set working directory
-
-        m_Window.reset(Window::Create(spec.WindowSpec));
-        LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
-
-        BindWindowEvents();
-        InputRuntime::Initialize();
-
-        m_Window->SetEventCallback([this](const IEvent& event)
+        m_Specification.WindowSpec.EventCallback = [this](const IEvent& event)
         {
             OnEvent(event);
-        });
+        };
+        BindWindowEvents();
+
+        m_Window.reset(Window::Create(m_Specification.WindowSpec));
+        LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
+
+        InputRuntime::Initialize();
 
         // TODO: Init Renderer
     }
@@ -51,9 +52,10 @@ namespace Loom
     Application::~Application()
     {
         // TODO: Shutdown Renderer
+        Instance = nullptr;
 
         m_Window.reset();
-        m_Context.reset();
+        m_PlatformContext.reset();
 
         InputRuntime::Shutdown();
         EventDispatcher::UnsubscribeAll();

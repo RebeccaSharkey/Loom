@@ -10,6 +10,7 @@ int main(int argc, char** argv);
 
 namespace Loom
 {
+    class IEvent;
     class Window;
     struct PlatformContext;
 
@@ -42,7 +43,7 @@ namespace Loom
     private:
         bool bIsRunning = true;
         ApplicationSpecification m_Specification;
-        std::unique_ptr<PlatformContext> m_Context;
+        std::unique_ptr<PlatformContext> m_PlatformContext;
         std::unique_ptr<Window> m_Window;
 
         void Run();

@@ -7,13 +7,12 @@
 
 namespace Loom
 {
-    struct SDL_Window;
-
     class SDLWindow final : public Window
     {
     public:
+
         explicit SDLWindow(const WindowSpecification& spec);
-        ~SDLWindow();
+        ~SDLWindow() override;
 
     private:
         SDLWindowPtr window;
@@ -29,16 +28,21 @@ namespace Loom
         void DispatchEvent(const EventT& event)
         {
             if (m_EventCallback)
+            {
                 m_EventCallback(event);
+            }
         }
 
     public:
-        virtual void SetEventCallback(EventCallbackFn callback) override { m_EventCallback = std::move(callback); }
+        void SetEventCallback(EventCallbackFn callback) override;
 
         virtual void OnUpdate() override;
         virtual void PollEvents() override;
 
+        void SetWidth(uint32 width) override;
         uint32 GetWidth() const override;
+
+        void SetHeight(uint32 height) override;
         uint32 GetHeight() const override;
 
         void SetVSync(bool enabled) override;
