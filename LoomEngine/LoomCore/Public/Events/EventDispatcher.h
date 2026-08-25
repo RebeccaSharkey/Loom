@@ -2,14 +2,17 @@
 
 #pragma once
 
+#include <deque>
+
 #include "LoomEngine.h"
 #include "IEvent.h"
 #include "EventHandle.h"
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <shared_mutex>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Loom
@@ -33,7 +36,6 @@ namespace Loom
     class EventDispatcher
     {
         using EventCallbackFn = std::function<void(const void*)>;
-        using ListenerID = size_t;
 
     public:
         template<typename EventT>
@@ -54,30 +56,41 @@ namespace Loom
         
         static void Flush();
 
-        // Debug hooks
         static size_t GetListenerCount(EventID id);
         static size_t GetOwnerCount(OwnerID id);
 
-        struct ListenerEntry
+    private:
+
+        struct Slot
         {
             EventCallbackFn Callback;
-            OwnerID Owner = 0;
+            OwnerID Owner = InvalidOwnerID;
+            uint32 Generation = 0;
+
+            bool IsActive() const { return (Generation & 1u) != 0; }
         };
 
-        struct ListenerGroup
+        struct Channel
         {
-            std::unordered_map<ListenerID, ListenerEntry> Listeners;
-            size_t NextID = 1;
+            std::deque<Slot> Slots;
+            std::vector<uint32> Order;
+            std::vector<uint32> FreeList;
         };
 
-    private:
-        static std::unordered_map<EventID, ListenerGroup>& GetListenerMap();
-        static std::shared_mutex& GetListenerMutex();
+        static std::unordered_map<EventID, Channel>& GetChannels();
+        static std::recursive_mutex& GetListenerMutex();
+        static int& GetDispatcherCount();
+
+        static std::vector<std::pair<EventID, uint32>>& GetPendingFrees();
 
         static std::vector<QueuedEvent>& GetQueue();
         static std::mutex& GetQueueMutex();
 
-        static void InternalBroadcast(EventID id, const void* data);
+        static EventHandle InternalSubscribe(EventID eventID, EventCallbackFn function, OwnerID owner);
+        static void InternalBroadcast(EventID eventID, const void* data);
+
+        static void KillSlot(EventID eventID, Channel& channel, uint32 index);
+        static void ReclaimSlot(Channel& channel, uint32 index);
     };
 
     template<typename EventT>
@@ -87,18 +100,13 @@ namespace Loom
 
         std::unique_lock lock(GetListenerMutex());
 
-        EventID eventId = EventType<EventT>::ID();
-        auto& group = GetListenerMap()[eventId];
-
-        ListenerID id = group.NextID++;
-        group.Listeners[id] = ListenerEntry {
-            [cb = std::move(callback)](const void* raw) {
+        return InternalSubscribe(
+            EventType<EventT>::ID(),
+            [cb = std::move(callback)](const void* raw)
+            {
                 cb(*reinterpret_cast<const EventT*>(raw));
             },
-            owner
-        };
-
-        return EventHandle(eventId, id);
+            owner);
     }
 
     template<typename EventT>
@@ -126,10 +134,10 @@ namespace Loom
     
     inline void ScopedEventHandle::Unsubscribe()
     {
-        if (Handle.IsValid())
+        if (m_Handle.IsValid())
         {
-            EventDispatcher::Unsubscribe(Handle);
-            Handle.Invalidate();
+            EventDispatcher::Unsubscribe(m_Handle);
+            m_Handle.Invalidate();
         }
     }
 }

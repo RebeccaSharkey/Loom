@@ -3,7 +3,7 @@
 
 #include "LoomEngine.h"
 #include "EventType.h"
-#include <algorithm>
+#include <utility>
 
 namespace Loom
 {
@@ -11,42 +11,38 @@ namespace Loom
     {
     public:
         EventHandle() = default;
-        EventHandle(EventID eventID, size_t listenerID)
-            : EventID(eventID), ListenerID(listenerID) {};
+        EventHandle(EventID eventID, uint32 index, uint32 generation)
+            : m_EventID(eventID), m_Index(index), m_Generation(generation) {};
 
 
-        bool IsValid() const { return EventID != InvalidID;};
-        void Invalidate() { EventID = InvalidID; };
+        bool IsValid() const { return m_Generation != 0; }
+        void Invalidate() { m_Generation = 0; }
 
-        EventID GetEventID() const { return EventID; };
-        size_t GetListenerID() const { return ListenerID; };
-
+        EventID GetEventID() const { return m_EventID; }
+        uint32  GetIndex() const { return m_Index; }
+        uint32  GetGeneration() const { return m_Generation; }
 
     private:
-        static constexpr EventID InvalidID = ~static_cast<EventID>(0);
-
-        EventID EventID = InvalidID;
-        size_t ListenerID = 0;
+        EventID m_EventID = 0;
+        uint32 m_Index = 0;
+        uint32 m_Generation = 0;
     };
 
     class ScopedEventHandle
     {
-        public:
+    public:
         ScopedEventHandle() = default;
-        explicit ScopedEventHandle(EventHandle handle)
-            : Handle(std::move(handle)) {};
+        explicit ScopedEventHandle(const EventHandle handle)
+            : m_Handle(handle) {};
 
         ScopedEventHandle(ScopedEventHandle&& other) noexcept
-        {
-            other.Handle.Invalidate();
-        };
+            : m_Handle(std::exchange(other.m_Handle, EventHandle{})) {};
         ScopedEventHandle& operator=(ScopedEventHandle&& other) noexcept
         {
             if (this != &other)
             {
                 Unsubscribe();
-                Handle = other.Handle;
-                other.Handle.Invalidate();
+                m_Handle = std::exchange(other.m_Handle, EventHandle{});
             }
             return *this;
         }
@@ -60,11 +56,10 @@ namespace Loom
         }
 
         void Unsubscribe();
-
-        bool IsValid() const { return Handle.IsValid(); };
+        bool IsValid() const { return m_Handle.IsValid(); };
 
     private:
-        EventHandle Handle;
+        EventHandle m_Handle;
     };
 }
 
