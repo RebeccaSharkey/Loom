@@ -25,6 +25,5 @@ void Loom::PlatformDestroyer::operator()(SDL_Window* window) const
     if (window)
     {
         SDL_DestroyWindow(window);
-        LOOM_LOG_QUIET("SDL_Destroyer", "SDL Window Destroyed" );
     }
 }

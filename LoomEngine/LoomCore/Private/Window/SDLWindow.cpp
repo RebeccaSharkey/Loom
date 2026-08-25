@@ -14,11 +14,7 @@ namespace Loom
 
     SDLWindow::SDLWindow(const WindowSpecification &spec)
     {
-        LOOM_LOG_TRACE("SDLWindow", "Creating SDL Window: %s (%ux%u)", spec.Title.c_str(), spec.Width, spec.Height);
-
         CreateSDLWindow(spec);
-
-        LOOM_LOG_INFO("SDLWindow", "SDL Window created successfully");
     }
 
     SDLWindow::~SDLWindow()
@@ -33,7 +29,7 @@ namespace Loom
             m_EventCallback = spec.EventCallback;
         }
 
-        window.reset(SDL_CreateWindow(spec.Title.c_str(), spec.Width, spec.Height, 0));
+        window.reset(SDL_CreateWindow(spec.Title.c_str(), spec.Width, spec.Height, SDL_WINDOW_RESIZABLE));
         LOOM_VERIFY(window.get(), SDL_GetError());
     }
 
