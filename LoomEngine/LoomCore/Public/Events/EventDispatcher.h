@@ -2,10 +2,7 @@
 
 #pragma once
 
-#include <deque>
-
 #include "LoomEngine.h"
-#include "IEvent.h"
 #include "EventHandle.h"
 #include <deque>
 #include <functional>
@@ -49,7 +46,6 @@ namespace Loom
 
         template<typename EventT>
         static void Broadcast(const EventT& event);
-        static void Broadcast(const IEvent& event);
 
         template<typename EventT>
         static void Enqueue(const EventT& event);
@@ -96,10 +92,6 @@ namespace Loom
     template<typename EventT>
     EventHandle EventDispatcher::Subscribe(std::function<void(const EventT&)> callback, OwnerID owner)
     {
-        static_assert(std::is_base_of_v<IEvent, EventT>, "EventT must derive from IEvent");
-
-        std::unique_lock lock(GetListenerMutex());
-
         return InternalSubscribe(
             EventType<EventT>::ID(),
             [cb = std::move(callback)](const void* raw)
@@ -118,14 +110,12 @@ namespace Loom
     template<typename EventT>
     void EventDispatcher::Broadcast(const EventT& event)
     {
-        static_assert(std::is_base_of_v<IEvent, EventT>, "EventT must derive from IEvent");
         InternalBroadcast(EventType<EventT>::ID(), &event);
     }
 
     template<typename EventT>
     void EventDispatcher::Enqueue(const EventT& event)
     {
-        static_assert(std::is_base_of_v<IEvent, EventT>, "EventT must derive from IEvent");
         static_assert(std::is_copy_constructible_v<EventT>, "EventT must be copyable to enqueue");
         
         std::lock_guard lock(GetQueueMutex());

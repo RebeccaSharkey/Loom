@@ -10,6 +10,5 @@
 #include "Math/Math.h"
 
 #include "Events/EventType.h"
-#include "Events/EventMacro.h"
 
 #include "Log/Log.h"

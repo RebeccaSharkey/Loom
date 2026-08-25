@@ -8,7 +8,6 @@
 
 // Public Sources
 #include "Core/Time.h"
-#include "Events/IEvent.h"
 #include "Events/EventDispatcher.h"
 #include "Events/Events/WindowEvents.h"
 #include "Window/Window.h"
@@ -32,13 +31,9 @@ namespace Loom
         LOOM_ASSERT(!Instance, "Application already exists");
         Instance = this;
 
-        m_PlatformContext = std::make_unique<PlatformContext>();
-
-        m_Specification.WindowSpec.EventCallback = [this](const IEvent& event)
-        {
-            OnEvent(event);
-        };
         BindWindowEvents();
+
+        m_PlatformContext = std::make_unique<PlatformContext>();
 
         m_Window.reset(Window::Create(m_Specification.WindowSpec));
         LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
@@ -86,11 +81,6 @@ namespace Loom
         }
 
         OnShutdown();
-    }
-
-    void Application::OnEvent(const IEvent& event)
-    {
-        EventDispatcher::Broadcast(event);
     }
 
     void Application::BindWindowEvents()

@@ -3,6 +3,7 @@
 #include "Events/EventDispatcher.h"
 
 #include <algorithm>
+#include <utility>
 
 namespace Loom
 {
@@ -49,11 +50,6 @@ namespace Loom
                 }
             }
         }
-    }
-
-    void EventDispatcher::Broadcast(const IEvent& event)
-    {
-        InternalBroadcast(event.GetEventTypeID(), &event);
     }
 
     void EventDispatcher::Flush()
@@ -160,7 +156,7 @@ namespace Loom
 
         Slot& slot = channel.Slots[index];
         slot.Generation += 1;
-        slot.Callback = function;
+        slot.Callback = std::move(function);
         slot.Owner = owner;
 
         channel.Order.push_back(index);
@@ -177,7 +173,7 @@ namespace Loom
 
         Channel& channel = it->second;
 
-        const size_t count = channel.Slots.size();
+        const size_t count = channel.Order.size();
 
         ++GetDispatcherCount();
 
@@ -198,12 +194,12 @@ namespace Loom
             for (const auto& [pendingID, pendingIndex] : pending)
             {
                 auto channelIt = GetChannels().find(pendingID);
-                if (channelIt == GetChannels().end())
+                if (channelIt != GetChannels().end())
                 {
                     ReclaimSlot(channelIt->second, pendingIndex);
                 }
-                pending.clear();
             }
+            pending.clear();
         }
     }
 

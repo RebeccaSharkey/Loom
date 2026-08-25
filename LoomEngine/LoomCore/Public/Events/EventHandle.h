@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
 #pragma once
 
-#include "LoomEngine.h"
+#include "Core/Types.h"
 #include "EventType.h"
 #include <utility>
 

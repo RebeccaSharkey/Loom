@@ -4,6 +4,7 @@
 #include "Window/Window.h"
 
 #include "../Utilities/PlatformUtils.h"
+#include "Events/EventDispatcher.h"
 
 namespace Loom
 {
@@ -22,20 +23,13 @@ namespace Loom
 
         // --- Event Handling ---
 
-        EventCallbackFn m_EventCallback;
-
         template<typename EventT>
         void DispatchEvent(const EventT& event)
         {
-            if (m_EventCallback)
-            {
-                m_EventCallback(event);
-            }
+            EventDispatcher::Broadcast(event);
         }
 
     public:
-        void SetEventCallback(EventCallbackFn callback) override;
-
         virtual void OnUpdate() override;
         virtual void PollEvents() override;
 

@@ -24,11 +24,6 @@ namespace Loom
 
     void SDLWindow::CreateSDLWindow(const WindowSpecification &spec)
     {
-        if (spec.EventCallback)
-        {
-            m_EventCallback = spec.EventCallback;
-        }
-
         window.reset(SDL_CreateWindow(spec.Title.c_str(), spec.Width, spec.Height, SDL_WINDOW_RESIZABLE));
         LOOM_VERIFY(window.get(), SDL_GetError());
     }
@@ -51,7 +46,7 @@ namespace Loom
                     break;
 
                 case SDL_EVENT_WINDOW_FOCUS_GAINED:
-                    DispatchEvent(WindowGainFocusEvent());
+                    DispatchEvent(WindowGainedFocusEvent());
                     break;
 
                 case SDL_EVENT_WINDOW_FOCUS_LOST:
@@ -62,11 +57,6 @@ namespace Loom
                     break;
             }
         }
-    }
-
-    void SDLWindow::SetEventCallback(EventCallbackFn callback)
-    {
-        m_EventCallback = callback;
     }
 
     void SDLWindow::SetWidth(uint32 width)

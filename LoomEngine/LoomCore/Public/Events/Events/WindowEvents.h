@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include "LoomEngine.h"
+#include "Core/Types.h"
 
 namespace Loom
 {
-    LOOM_EVENT(WindowCloseEvent)
-
-    LOOM_EVENT(WindowGainFocusEvent)
-    LOOM_EVENT(WindowLostFocusEvent)
+    struct WindowCloseEvent {};
+    struct WindowGainedFocusEvent {};
+    struct WindowLostFocusEvent {};
+    struct WindowResizedEvent {uint32 width, height;};
 }
 

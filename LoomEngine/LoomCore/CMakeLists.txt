@@ -36,11 +36,9 @@ set(LOOMCORE_LOG_SOURCES
 
 # ----------- Event Module ----------- #
 set(LOOMCORE_EVENT_SOURCES
-        Public/Events/IEvent.h
         Public/Events/EventType.h
         Public/Events/EventDispatcher.h
         Public/Events/EventHandle.h
-        Public/Events/EventMacro.h
 
         Public/Events/Events/WindowEvents.h
         Public/Events/Events/KeyEvents.h

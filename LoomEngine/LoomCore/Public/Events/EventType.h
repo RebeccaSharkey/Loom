@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Core/Core.h"
 #include <cstdint>
 
 namespace Loom

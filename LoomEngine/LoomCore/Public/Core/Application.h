@@ -3,14 +3,12 @@
 #pragma once
 
 #include "LoomEngine.h"
-#include "Events/EventMacro.h"
 #include "Window/Window.h"
 
 int main(int argc, char** argv);
 
 namespace Loom
 {
-    class IEvent;
     class Window;
     struct PlatformContext;
 
@@ -38,7 +36,6 @@ namespace Loom
         virtual void OnStart() {}
         virtual void OnUpdate(const float DeltaTime) {}
         virtual void OnShutdown() {}
-        virtual void OnEvent(const IEvent& event);
 
     private:
         bool bIsRunning = true;
