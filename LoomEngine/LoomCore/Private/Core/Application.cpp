@@ -14,7 +14,6 @@
 #include "Window/Window.h"
 
 // Private Sources
-#include "../Input/InputRuntime.h"
 #include "../Utilities/PlatformUtils.h"
 
 namespace Loom
@@ -44,8 +43,6 @@ namespace Loom
         m_Window.reset(Window::Create(m_Specification.WindowSpec));
         LOOM_ASSERT(m_Window, "Application::Application - Failed to create window");
 
-        InputRuntime::Initialize();
-
         // TODO: Init Renderer
     }
 
@@ -58,7 +55,6 @@ namespace Loom
         m_Window.reset();
         m_PlatformContext.reset();
 
-        InputRuntime::Shutdown();
         EventDispatcher::UnsubscribeAll();
 
         LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
@@ -83,10 +79,8 @@ namespace Loom
             Time::UpdateTime(deltaTime);
 
             // Window and Input Events
-            InputRuntime::BeginFrame();
             m_Window->PollEvents();
             EventDispatcher::Flush();
-            InputRuntime::EndFrame();
 
             OnUpdate(static_cast<float>(deltaTime));
         }

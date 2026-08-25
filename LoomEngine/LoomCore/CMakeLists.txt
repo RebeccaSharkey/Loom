@@ -51,19 +51,7 @@ set(LOOMCORE_EVENT_SOURCES
 
 # ----------- Input Module ----------- #
 set(LOOMCORE_INPUT_SOURCES
-        Public/Input/InputAction.h
-        Public/Input/InputContext.h
-        Public/Input/InputSubsystem.h
-        Public/Input/InputTypes.h
-        Public/Input/KeyCodes.h
-        Public/Input/MouseCodes.h
-        Private/Input/InputRuntime.h
 
-        Private/Input/InputAction.cpp
-        Private/Input/InputContext.cpp
-        Private/Input/InputRuntime.cpp
-        Private/Input/InputSubsystem.cpp
-        Private/Input/InputTypes.cpp
 )
 
 # ----------- Window Module ----------- #
