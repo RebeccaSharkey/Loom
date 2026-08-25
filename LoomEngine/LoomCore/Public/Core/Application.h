@@ -3,6 +3,7 @@
 #pragma once
 
 #include "LoomEngine.h"
+#include "Events/EventSink.h"
 #include "Window/Window.h"
 
 int main(int argc, char** argv);
@@ -27,7 +28,7 @@ namespace Loom
     {
         friend int ::main(int argc, char** argv);
         static Application* Instance;
-        OwnerID EventSystemID = GenerateOwnerID();
+
 
     public:
         explicit Application(const ApplicationSpecification& spec = ApplicationSpecification());
@@ -42,6 +43,7 @@ namespace Loom
         ApplicationSpecification m_Specification;
         std::unique_ptr<PlatformContext> m_PlatformContext;
         std::unique_ptr<Window> m_Window;
+        EventSink ApplicationEvents;
 
         void Run();
         void BindWindowEvents();

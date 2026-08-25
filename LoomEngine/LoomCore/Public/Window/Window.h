@@ -24,8 +24,6 @@ namespace Loom
     class Window
     {
     public:
-        using EventCallbackFn = std::function<void(const void*)>;
-
         static Window* Create(const WindowSpecification& spec = WindowSpecification());
         virtual ~Window() = default;
 

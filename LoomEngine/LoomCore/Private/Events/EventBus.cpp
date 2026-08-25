@@ -1,13 +1,13 @@
-// Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
+﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 
-#include "Events/EventDispatcher.h"
+#include "Events/EventBus.h"
 
 #include <algorithm>
 #include <utility>
 
 namespace Loom
 {
-    void EventDispatcher::Unsubscribe(const EventHandle& handle)
+    void EventBus::Unsubscribe(const EventHandle &handle)
     {
         if (!handle.IsValid()) return;
 
@@ -25,7 +25,7 @@ namespace Loom
         KillSlot(handle.GetEventID(), channel, handle.GetIndex());
     }
 
-    void EventDispatcher::UnsubscribeAll()
+    void EventBus::UnsubscribeAll()
     {
         std::unique_lock lock(GetListenerMutex());
         LOOM_ASSERT(GetDispatcherCount() == 0, "UnsubscribeAll() called from inside a listener");
@@ -34,25 +34,7 @@ namespace Loom
         GetPendingFrees().clear();
     }
 
-    void EventDispatcher::UnsubscribeAllForOwner(OwnerID owner)
-    {
-        if (owner == InvalidOwnerID) return;
-
-        std::lock_guard lock(GetListenerMutex());
-
-        for (auto& [eventID, channel] : GetChannels())
-        {
-            for (size_t i = 0; i < channel.Slots.size(); ++i)
-            {
-                if (channel.Slots[i].IsActive() && channel.Slots[i].Owner == owner)
-                {
-                    KillSlot(eventID, channel, static_cast<uint32>(i));
-                }
-            }
-        }
-    }
-
-    void EventDispatcher::Flush()
+    void EventBus::Flush()
     {
         std::vector<QueuedEvent> queue;
         {
@@ -66,7 +48,7 @@ namespace Loom
         }
     }
 
-    size_t EventDispatcher::GetListenerCount(EventID id)
+    size_t EventBus::GetListenerCount(EventID id)
     {
         std::lock_guard lock(GetListenerMutex());
 
@@ -82,62 +64,43 @@ namespace Loom
         return count;
     }
 
-    size_t EventDispatcher::GetOwnerCount(OwnerID id)
-    {
-        std::lock_guard lock(GetListenerMutex());
-
-        size_t count = 0;
-        for (const auto& [eventID, channel] : GetChannels())
-        {
-            for (const Slot& slot : channel.Slots)
-            {
-                if (slot.IsActive() && slot.Owner == id)
-                {
-                    ++count;
-                }
-            }
-        }
-
-        return count;
-    }
-
-    std::unordered_map<EventID, EventDispatcher::Channel>& EventDispatcher::GetChannels()
+    std::unordered_map<EventID, EventBus::Channel>& EventBus::GetChannels()
     {
         static std::unordered_map<EventID, Channel> s_Channels;
         return s_Channels;
     }
 
-    std::recursive_mutex& EventDispatcher::GetListenerMutex()
+    std::recursive_mutex& EventBus::GetListenerMutex()
     {
         static std::recursive_mutex s_ListenerMutex;
         return s_ListenerMutex;
     }
 
-    int& EventDispatcher::GetDispatcherCount()
+    int& EventBus::GetDispatcherCount()
     {
         static int s_DispatchCount = 0;
         return s_DispatchCount;
     }
 
-    std::vector<std::pair<EventID, uint32>>& EventDispatcher::GetPendingFrees()
+    std::vector<std::pair<EventID, uint32>>& EventBus::GetPendingFrees()
     {
         static std::vector<std::pair<EventID, uint32>> s_PendingFrees;
         return s_PendingFrees;
     }
 
-    std::vector<QueuedEvent> & EventDispatcher::GetQueue()
+    std::vector<QueuedEvent> & EventBus::GetQueue()
     {
         static std::vector<QueuedEvent> s_Queue;
         return s_Queue;
     }
 
-    std::mutex& EventDispatcher::GetQueueMutex()
+    std::mutex& EventBus::GetQueueMutex()
     {
         static std::mutex s_QueueMutex;
         return s_QueueMutex;
     }
 
-    EventHandle EventDispatcher::InternalSubscribe(EventID eventID, EventCallbackFn function, OwnerID owner)
+    EventHandle EventBus::InternalSubscribe(EventID eventID, EventCallback function)
     {
         std::lock_guard lock(GetListenerMutex());
 
@@ -157,14 +120,13 @@ namespace Loom
         Slot& slot = channel.Slots[index];
         slot.Generation += 1;
         slot.Callback = std::move(function);
-        slot.Owner = owner;
 
         channel.Order.push_back(index);
 
         return EventHandle(eventID, index,  slot.Generation);
     }
 
-    void EventDispatcher::InternalBroadcast(EventID eventID, const void* data)
+    void EventBus::InternalBroadcast(EventID eventID, const void* data)
     {
         std::lock_guard lock(GetListenerMutex());
 
@@ -203,13 +165,12 @@ namespace Loom
         }
     }
 
-    void EventDispatcher::KillSlot(EventID eventID, Channel &channel, uint32 index)
+    void EventBus::KillSlot(EventID eventID, Channel &channel, uint32 index)
     {
         Slot& slot = channel.Slots[index];
 
         slot.Generation += 1;
         slot.Callback = nullptr;
-        slot.Owner = InvalidOwnerID;
 
         if (GetDispatcherCount() > 0)
         {
@@ -221,7 +182,7 @@ namespace Loom
         }
     }
 
-    void EventDispatcher::ReclaimSlot(Channel &channel, uint32 index)
+    void EventBus::ReclaimSlot(Channel &channel, uint32 index)
     {
         channel.Order.erase(
             std::remove(channel.Order.begin(), channel.Order.end(), index),

@@ -8,8 +8,7 @@
 
 // Public Sources
 #include "Core/Time.h"
-#include "Events/EventDispatcher.h"
-#include "Events/Events/WindowEvents.h"
+#include "Window/WindowEvents.h"
 #include "Window/Window.h"
 
 // Private Sources
@@ -50,8 +49,6 @@ namespace Loom
         m_Window.reset();
         m_PlatformContext.reset();
 
-        EventDispatcher::UnsubscribeAll();
-
         LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
 
         Log::Flush();
@@ -75,7 +72,7 @@ namespace Loom
 
             // Window and Input Events
             m_Window->PollEvents();
-            EventDispatcher::Flush();
+            EventBus::Flush();
 
             OnUpdate(static_cast<float>(deltaTime));
         }
@@ -85,10 +82,10 @@ namespace Loom
 
     void Application::BindWindowEvents()
     {
-        EventDispatcher::Subscribe<WindowCloseEvent>([this] (const WindowCloseEvent&)
+        ApplicationEvents.Subscribe<WindowCloseEvent>([this] (const WindowCloseEvent&)
         {
             OnWindowClosed();
-        }, EventSystemID);
+        });
     }
 
     void Application::OnWindowClosed()

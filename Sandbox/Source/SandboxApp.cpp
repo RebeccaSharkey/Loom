@@ -1,12 +1,12 @@
 // Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "EntryPoint.h"
-#include "Events/EventDispatcher.h"
 
 class LoomSandbox final : public Loom::Application
 {
 
-    Loom::OwnerID EventOwner = Loom::GenerateOwnerID();
+private:
+    Loom::EventSink Events;
 
 public:
     LoomSandbox()
@@ -29,7 +29,6 @@ public:
 
     void OnShutdown() override
     {
-        Loom::EventDispatcher::UnsubscribeAllForOwner(EventOwner);
         LOOM_LOG_NOTICE("Sandbox", "Sandbox shutdown.");
     }
 

@@ -3,8 +3,8 @@
 
 #include "Window/Window.h"
 
+#include "Events/EventBus.h"
 #include "../Utilities/PlatformUtils.h"
-#include "Events/EventDispatcher.h"
 
 namespace Loom
 {
@@ -26,7 +26,7 @@ namespace Loom
         template<typename EventT>
         void DispatchEvent(const EventT& event)
         {
-            EventDispatcher::Broadcast(event);
+            EventBus::Broadcast(event);
         }
 
     public:

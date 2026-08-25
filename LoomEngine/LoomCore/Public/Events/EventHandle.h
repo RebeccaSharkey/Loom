@@ -27,39 +27,5 @@ namespace Loom
         uint32 m_Index = 0;
         uint32 m_Generation = 0;
     };
-
-    class ScopedEventHandle
-    {
-    public:
-        ScopedEventHandle() = default;
-        explicit ScopedEventHandle(const EventHandle handle)
-            : m_Handle(handle) {};
-
-        ScopedEventHandle(ScopedEventHandle&& other) noexcept
-            : m_Handle(std::exchange(other.m_Handle, EventHandle{})) {};
-        ScopedEventHandle& operator=(ScopedEventHandle&& other) noexcept
-        {
-            if (this != &other)
-            {
-                Unsubscribe();
-                m_Handle = std::exchange(other.m_Handle, EventHandle{});
-            }
-            return *this;
-        }
-
-        ScopedEventHandle(const ScopedEventHandle&) = delete;
-        ScopedEventHandle& operator=(const ScopedEventHandle&) = delete;
-
-        ~ScopedEventHandle()
-        {
-            Unsubscribe();
-        }
-
-        void Unsubscribe();
-        bool IsValid() const { return m_Handle.IsValid(); };
-
-    private:
-        EventHandle m_Handle;
-    };
 }
 

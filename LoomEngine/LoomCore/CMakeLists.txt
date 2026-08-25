@@ -36,15 +36,12 @@ set(LOOMCORE_LOG_SOURCES
 
 # ----------- Event Module ----------- #
 set(LOOMCORE_EVENT_SOURCES
-        Public/Events/EventType.h
-        Public/Events/EventDispatcher.h
+        Public/Events/EventBus.h
         Public/Events/EventHandle.h
+        Public/Events/EventSink.h
+        Public/Events/EventType.h
 
-        Public/Events/Events/WindowEvents.h
-        Public/Events/Events/KeyEvents.h
-        Public/Events/Events/MouseEvents.h
-
-        Private/Events/EventDispatcher.cpp
+        Private/Events/EventBus.cpp
 )
 
 # ----------- Input Module ----------- #
@@ -55,6 +52,7 @@ set(LOOMCORE_INPUT_SOURCES
 # ----------- Window Module ----------- #
 set(LOOMCORE_WINDOW_SOURCES
         Public/Window/Window.h
+        Public/Window/WindowEvents.h
 
         Private/Window/SDLWindow.cpp
         Private/Window/SDLWindow.h
