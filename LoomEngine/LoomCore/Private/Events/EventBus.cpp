@@ -11,7 +11,7 @@ namespace Loom
     {
         if (!handle.IsValid()) return;
 
-        std::unique_lock lock(GetListenerMutex());
+        std::lock_guard lock(GetListenerMutex());
 
         auto it = GetChannels().find(handle.GetEventID());
         if (it == GetChannels().end()) return;
@@ -27,8 +27,10 @@ namespace Loom
 
     void EventBus::UnsubscribeAll()
     {
-        std::unique_lock lock(GetListenerMutex());
+        std::lock_guard lock(GetListenerMutex());
         LOOM_ASSERT(GetDispatcherDepth() == 0, "UnsubscribeAll() called from inside a listener");
+
+        if (GetDispatcherDepth() > 0) return;
 
         GetChannels().clear();
         GetPendingFrees().clear();

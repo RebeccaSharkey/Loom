@@ -2,9 +2,6 @@
 
 #pragma once
 
-#include <functional>
-#include <utility>
-
 #include "LoomEngine.h"
 
 namespace Loom

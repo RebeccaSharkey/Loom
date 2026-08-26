@@ -1,4 +1,4 @@
-// © 2025 Ctrl Alt Delete Games. All rights reserved.
+﻿// © 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "Core/Application.h"
 
@@ -84,7 +84,7 @@ namespace Loom
         ApplicationEvents.Subscribe<WindowCloseEvent>([this](const WindowCloseEvent&)
         {
             OnWindowClosed();
-        });
+        }, EventPriority::Late);
     }
 
     void Application::OnWindowClosed()

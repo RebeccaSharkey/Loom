@@ -9,6 +9,6 @@ namespace Loom
     struct WindowCloseEvent {};
     struct WindowGainedFocusEvent {};
     struct WindowLostFocusEvent {};
-    struct WindowResizedEvent {uint32 width, height;};
+    struct WindowResizedEvent { uint32 Width, Height; };
 }
 

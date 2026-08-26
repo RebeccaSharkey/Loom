@@ -109,11 +109,14 @@ namespace Loom
     template<typename EventT, typename CallbackT>
     EventHandle EventBus::Subscribe(CallbackT&& callback, EventPriority priority)
     {
+        static_assert(std::is_class_v<EventT>,
+            "EventT must be a plain event struct -- not a pointer, reference or built-in type");
+
         EventCallback tempCallback;
 
         if constexpr (std::is_invocable_v<CallbackT, const EventT&, EventContext&>)
         {
-            tempCallback = [cb = std::forward<CallbackT>(callback)](const void* event, EventContext& context)
+            tempCallback = [cb = std::forward<CallbackT>(callback)](const void* event, EventContext& context) mutable
             {
                 cb(*reinterpret_cast<const EventT*>(event), context);
             };
@@ -123,7 +126,7 @@ namespace Loom
             static_assert(std::is_invocable_v<CallbackT, const EventT&>,
                 "Listener must be callable as (const EventT&) or (const EventT&, EventContext&)");
 
-            tempCallback = [cb = std::forward<CallbackT>(callback)](const void* event, EventContext&)
+            tempCallback = [cb = std::forward<CallbackT>(callback)](const void* event, EventContext&) mutable
             {
                 cb(*reinterpret_cast<const EventT*>(event));
             };
@@ -135,12 +138,17 @@ namespace Loom
     template<typename EventT>
     void EventBus::Broadcast(const EventT& event)
     {
+        static_assert(std::is_class_v<EventT>,
+            "EventT must be a plain event struct -- not a pointer, reference or built-in type");
+
         InternalBroadcast(EventType<EventT>::ID(), &event);
     }
 
     template<typename EventT>
     void EventBus::Enqueue(const EventT& event)
     {
+        static_assert(std::is_class_v<EventT>,
+            "EventT must be a plain event struct -- not a pointer, reference or built-in type");
         static_assert(std::is_copy_constructible_v<EventT>, "EventT must be copyable to enqueue");
 
         std::lock_guard lock(GetQueueMutex());

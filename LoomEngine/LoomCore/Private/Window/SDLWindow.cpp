@@ -2,8 +2,8 @@
 
 #include "SDLWindow.h"
 #include "SDL3/SDL.h"
-#include "../../Public/Window/WindowEvents.h"
 
+#include "Window/WindowEvents.h"
 
 namespace Loom
 {

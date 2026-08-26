@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <cstdint>
 
 namespace Loom
