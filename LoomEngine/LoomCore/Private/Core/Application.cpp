@@ -42,12 +42,11 @@ namespace Loom
 
     Application::~Application()
     {
-        Instance = nullptr;
-
         // TODO: Shutdown Renderer
-
         m_Window.reset();
         m_PlatformContext.reset();
+
+        Instance = nullptr;
 
         LOOM_LOG_NOTICE("Loom", "Shutting down Loom Engine...");
 
@@ -82,7 +81,7 @@ namespace Loom
 
     void Application::BindWindowEvents()
     {
-        ApplicationEvents.Subscribe<WindowCloseEvent>([this] (const WindowCloseEvent&)
+        ApplicationEvents.Subscribe<WindowCloseEvent>([this](const WindowCloseEvent&)
         {
             OnWindowClosed();
         });

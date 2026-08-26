@@ -4,7 +4,7 @@
 #include "EventBus.h"
 #include "EventHandle.h"
 
-#include <functional>
+#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -35,10 +35,12 @@ namespace Loom
             return *this;
         }
 
-        template <typename EventT>
-        void Subscribe(std::function<void(const EventT&)> callback)
+        template <typename EventT, typename CallbackT>
+        EventHandle Subscribe(CallbackT&& callback, EventPriority priority = EventPriority::Gameplay)
         {
-            EventHandles.push_back(EventBus::Subscribe<EventT>(std::move(callback)));
+            EventHandle eventHandle = EventBus::Subscribe<EventT>(std::forward<CallbackT>(callback), priority);
+            EventHandles.push_back(eventHandle);
+            return eventHandle;
         }
 
         void Unsubscribe(EventHandle eventHandle)

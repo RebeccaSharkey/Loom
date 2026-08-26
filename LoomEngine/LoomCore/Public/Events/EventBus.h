@@ -8,12 +8,29 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace Loom
 {
+    enum class EventPriority : int32
+    {
+        Engine      = 0,    // Engine
+        Debug       = 100,  // Console and Profiler
+        UI          = 200,  // Menus and HUDs
+        Gameplay    = 300,  // Default
+        Late        = 400   // Logging and Analytics
+    };
+
+    struct EventContext
+    {
+        bool Handled = false;
+
+        // TODO: Analytics setup here for "What consumed the event"
+    };
+
     struct QueuedEvent
     {
         EventID ID;
@@ -31,13 +48,13 @@ namespace Loom
 
     class EventBus
     {
-        using EventCallback = std::function<void(const void*)>;
+        using EventCallback = std::function<void(const void*, EventContext&)>;
 
         friend class EventSink;
 
     private:
-        template<typename EventT>
-        static EventHandle Subscribe(std::function<void(const EventT& event)> callback);
+        template<typename EventT, typename CallbackT>
+        static EventHandle Subscribe(CallbackT&& callback, EventPriority priority = EventPriority::Gameplay);
 
         static void Unsubscribe(const EventHandle& handle);
 
@@ -58,6 +75,7 @@ namespace Loom
         struct Slot
         {
             EventCallback Callback;
+            EventPriority Priority = EventPriority::Gameplay;
             uint32 Generation = 0;
 
             bool IsActive() const { return (Generation & 1u) != 0; }
@@ -68,18 +86,19 @@ namespace Loom
             std::deque<Slot> Slots;
             std::vector<uint32> Order;
             std::vector<uint32> FreeList;
+            bool OrderDirty = false;
         };
 
         static std::unordered_map<EventID, Channel>& GetChannels();
         static std::recursive_mutex& GetListenerMutex();
-        static int& GetDispatcherCount();
+        static int& GetDispatcherDepth();
 
         static std::vector<std::pair<EventID, uint32>>& GetPendingFrees();
 
         static std::vector<QueuedEvent>& GetQueue();
         static std::mutex& GetQueueMutex();
 
-        static EventHandle InternalSubscribe(EventID eventID, EventCallback callback);
+        static EventHandle InternalSubscribe(EventID eventID, EventCallback callback, EventPriority priority);
         static void InternalBroadcast(EventID eventID, const void* data);
 
         static void KillSlot(EventID eventID, Channel& channel, uint32 index);
@@ -87,14 +106,30 @@ namespace Loom
 
     };
 
-    template<typename EventT>
-    EventHandle EventBus::Subscribe(std::function<void(const EventT&)> callback)
+    template<typename EventT, typename CallbackT>
+    EventHandle EventBus::Subscribe(CallbackT&& callback, EventPriority priority)
     {
-        return InternalSubscribe(EventType<EventT>::ID(),
-            [cb = std::move(callback)](const void* raw)
+        EventCallback tempCallback;
+
+        if constexpr (std::is_invocable_v<CallbackT, const EventT&, EventContext&>)
+        {
+            tempCallback = [cb = std::forward<CallbackT>(callback)](const void* event, EventContext& context)
             {
-                cb(*reinterpret_cast<const EventT*>(raw));
-            });
+                cb(*reinterpret_cast<const EventT*>(event), context);
+            };
+        }
+        else
+        {
+            static_assert(std::is_invocable_v<CallbackT, const EventT&>,
+                "Listener must be callable as (const EventT&) or (const EventT&, EventContext&)");
+
+            tempCallback = [cb = std::forward<CallbackT>(callback)](const void* event, EventContext&)
+            {
+                cb(*reinterpret_cast<const EventT*>(event));
+            };
+        }
+
+        return InternalSubscribe(EventType<EventT>::ID(), std::move(tempCallback), priority);
     }
 
     template<typename EventT>

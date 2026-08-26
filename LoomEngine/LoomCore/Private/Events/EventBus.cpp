@@ -28,7 +28,7 @@ namespace Loom
     void EventBus::UnsubscribeAll()
     {
         std::unique_lock lock(GetListenerMutex());
-        LOOM_ASSERT(GetDispatcherCount() == 0, "UnsubscribeAll() called from inside a listener");
+        LOOM_ASSERT(GetDispatcherDepth() == 0, "UnsubscribeAll() called from inside a listener");
 
         GetChannels().clear();
         GetPendingFrees().clear();
@@ -76,7 +76,7 @@ namespace Loom
         return s_ListenerMutex;
     }
 
-    int& EventBus::GetDispatcherCount()
+    int& EventBus::GetDispatcherDepth()
     {
         static int s_DispatchCount = 0;
         return s_DispatchCount;
@@ -100,7 +100,7 @@ namespace Loom
         return s_QueueMutex;
     }
 
-    EventHandle EventBus::InternalSubscribe(EventID eventID, EventCallback function)
+    EventHandle EventBus::InternalSubscribe(EventID eventID, EventCallback function, EventPriority priority)
     {
         std::lock_guard lock(GetListenerMutex());
 
@@ -120,8 +120,10 @@ namespace Loom
         Slot& slot = channel.Slots[index];
         slot.Generation += 1;
         slot.Callback = std::move(function);
+        slot.Priority = priority;
 
         channel.Order.push_back(index);
+        channel.OrderDirty = true;
 
         return EventHandle(eventID, index,  slot.Generation);
     }
@@ -135,9 +137,22 @@ namespace Loom
 
         Channel& channel = it->second;
 
+        if (channel.OrderDirty && GetDispatcherDepth() == 0)
+        {
+            std::stable_sort(channel.Order.begin(), channel.Order.end(),
+                [&channel](uint32 a, uint32 b)
+                {
+                    return channel.Slots[a].Priority < channel.Slots[b].Priority;
+                });
+
+            channel.OrderDirty = false;
+        }
+
         const size_t count = channel.Order.size();
 
-        ++GetDispatcherCount();
+        ++GetDispatcherDepth();
+
+        EventContext context;
 
         for (size_t i = 0; i < count; ++i)
         {
@@ -145,12 +160,14 @@ namespace Loom
 
             if (!slot.IsActive()) continue;
 
-            slot.Callback(data);
+            slot.Callback(data, context);
+
+            if (context.Handled) break;
         }
 
-        --GetDispatcherCount();
+        --GetDispatcherDepth();
 
-        if (GetDispatcherCount() == 0)
+        if (GetDispatcherDepth() == 0)
         {
             auto& pending = GetPendingFrees();
             for (const auto& [pendingID, pendingIndex] : pending)
@@ -168,11 +185,9 @@ namespace Loom
     void EventBus::KillSlot(EventID eventID, Channel &channel, uint32 index)
     {
         Slot& slot = channel.Slots[index];
-
         slot.Generation += 1;
-        slot.Callback = nullptr;
 
-        if (GetDispatcherCount() > 0)
+        if (GetDispatcherDepth() > 0)
         {
             GetPendingFrees().emplace_back(eventID, index);
         }
@@ -184,6 +199,8 @@ namespace Loom
 
     void EventBus::ReclaimSlot(Channel &channel, uint32 index)
     {
+        channel.Slots[index].Callback = nullptr;
+
         channel.Order.erase(
             std::remove(channel.Order.begin(), channel.Order.end(), index),
             channel.Order.end());

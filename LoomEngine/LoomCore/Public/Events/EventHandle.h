@@ -3,7 +3,6 @@
 
 #include "Core/Types.h"
 #include "EventType.h"
-#include <utility>
 
 namespace Loom
 {
