@@ -15,7 +15,7 @@ permissions:
 jobs:
   package:
     name: Package Windows (MSVC)
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     env:
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache

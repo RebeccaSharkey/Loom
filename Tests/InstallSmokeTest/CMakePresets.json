@@ -7,9 +7,8 @@
   "configurePresets": [
     {
       "name": "msvc",
-      "displayName": "Visual Studio 2022 (x64)",
-      "description": "Finds the engine through the LOOM_ROOT environment variable.",
-      "generator": "Visual Studio 17 2022",
+      "displayName": "Visual Studio (x64)",
+      "description": "Finds the engine through the LOOM_ROOT environment variable. No pinned generator, so the consumer is always built with the same toolset as the engine it links.",
       "architecture": "x64",
       "binaryDir": "${sourceDir}/Generated/${presetName}",
       "cacheVariables": {

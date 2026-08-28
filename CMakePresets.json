@@ -18,9 +18,8 @@
     {
       "name": "msvc",
       "inherits": "base",
-      "displayName": "Visual Studio 2022 (x64)",
-      "description": "Multi-config. Pick Debug/Release at build time.",
-      "generator": "Visual Studio 18 2026",
+      "displayName": "Visual Studio (x64)",
+      "description": "Multi-config. Pick Debug/Release at build time. No pinned generator: CMake picks the newest Visual Studio on the machine, so this preset survives a VS upgrade and matches whatever the CI image ships.",
       "architecture": "x64"
     }
   ],
