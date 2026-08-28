@@ -12,9 +12,7 @@ on:
 jobs:
   windows:
     name: Windows (MSVC)
-    # Pinned, not windows-latest. The msvc preset asks for the "Visual Studio 17
-    # 2022" generator, so the image has to actually ship VS 2022.
-    runs-on: windows-2022
+    runs-on: windows-2026
 
     env:
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
