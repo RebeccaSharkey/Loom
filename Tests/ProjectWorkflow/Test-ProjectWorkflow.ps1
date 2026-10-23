@@ -22,6 +22,20 @@ function Check([bool]$condition, [string]$label) {
     $checks.Add($label)
     Write-Host "PASS: $label"
 }
+function ConvertTo-OrderedJsonValue($value) {
+    if ($value -is [pscustomobject]) {
+        $ordered = [ordered]@{}
+        foreach ($property in $value.PSObject.Properties | Sort-Object Name) {
+            $ordered[$property.Name] = ConvertTo-OrderedJsonValue $property.Value
+        }
+        return $ordered
+    }
+    if ($value -is [array]) {
+        $items = @(foreach ($item in $value) { ConvertTo-OrderedJsonValue $item })
+        return ,$items
+    }
+    return $value
+}
 function Expect-Failure([scriptblock]$action, [string]$pattern, [string]$label) {
     $caught = $null
     try { & $action | Out-Null } catch { $caught = $_.Exception.Message }
@@ -198,7 +212,16 @@ try {
         Check $true 'Missing content produces a useful error and nonzero exit'
     }
     if ($RunGui) {
-        & (Join-Path $workflow 'New-LoomProjectGui.ps1') -AcceptanceDestination (Join-Path $root 'GUI Project') -AcceptanceEngineRoot $EngineRoot
+        $launcher = Join-Path $EngineRoot 'Loom.exe'
+        Check (Test-Path -LiteralPath $launcher) 'Installed SDK contains the terminal-free launcher executable'
+        $launcherArguments = @('-RequireNoConsole','-AcceptanceWindowControls','-PreviewWidth','780','-PreviewHeight','580',
+            '-AcceptanceDestination', ('"' + (Join-Path $root 'GUI Project') + '"'),
+            '-AcceptanceEngineRoot', ('"' + $EngineRoot + '"'),
+            '-PreviewPath', ('"' + (Join-Path $root 'Launcher.png') + '"'))
+        if ($RunApplications) { $launcherArguments += '-AcceptanceExerciseTasks' }
+        $launcherProcess = Start-Process -FilePath $launcher -ArgumentList $launcherArguments -WindowStyle Hidden -PassThru -Wait
+        Check ($launcherProcess.ExitCode -eq 0) 'EXE creates no console; minimize, maximize, restore, keyboard shortcuts and compact scrolling work'
+        Check (Test-Path -LiteralPath (Join-Path $root 'Launcher.png')) 'Executable launcher completes its visual acceptance pass'
         $guiDirectory = Join-Path $root 'GUI Project'
         Configure $guiDirectory | Out-Null
         Build $guiDirectory Debug | Out-Null
@@ -206,7 +229,16 @@ try {
         $equivalent = New-LoomProject -Name GuiProof -DisplayName 'GUI Proof' -Destination (Join-Path $root 'Equivalent CLI') -EngineRoot $EngineRoot -Modules Render2D
         foreach ($file in Get-ChildItem -LiteralPath $equivalent.Directory -File -Recurse -Force) {
             $relative = $file.FullName.Substring($equivalent.Directory.Length + 1)
-            Check ((Get-FileHash -LiteralPath $file.FullName).Hash -eq (Get-FileHash -LiteralPath (Join-Path $guiDirectory $relative)).Hash) "GUI/CLI equivalent: $relative"
+            $guiFile = Join-Path $guiDirectory $relative
+            if ($file.Extension -in @('.json','.loomproject')) {
+                # The EXE uses Windows PowerShell; CLI callers may use PowerShell 7.
+                # Compare JSON data, independent of their formatting/BOM/key order.
+                $cliValue = ConvertTo-OrderedJsonValue (Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json)
+                $guiValue = ConvertTo-OrderedJsonValue (Get-Content -LiteralPath $guiFile -Raw | ConvertFrom-Json)
+                Check (($cliValue | ConvertTo-Json -Depth 16 -Compress) -eq ($guiValue | ConvertTo-Json -Depth 16 -Compress)) "GUI/CLI equivalent: $relative"
+            } else {
+                Check ((Get-FileHash -LiteralPath $file.FullName).Hash -eq (Get-FileHash -LiteralPath $guiFile).Hash) "GUI/CLI equivalent: $relative"
+            }
         }
         if ($RunApplications) {
             foreach ($config in @('Debug','Release')) {

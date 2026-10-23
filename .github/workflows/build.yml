@@ -22,6 +22,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Verify interactive version updater and rollback
+        shell: pwsh
+        run: ./Tests/Versioning/Test-UpdateVersion.ps1
+
       - name: Point VCPKG_ROOT at the runner's vcpkg
         shell: pwsh
         run: |

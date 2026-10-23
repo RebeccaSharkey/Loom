@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(Loom LANGUAGES CXX VERSION 0.1.0 DESCRIPTION "Loom Engine")
+project(Loom LANGUAGES CXX VERSION 0.2.0 DESCRIPTION "Loom Engine")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
@@ -54,6 +54,13 @@ install(FILES
 )
 
 # Ship the same creation workflow with source builds and downloadable SDKs.
+if(WIN32)
+    add_executable(LoomProjectLauncher WIN32 Tools/ProjectWorkflow/Launcher.cpp)
+    set_target_properties(LoomProjectLauncher PROPERTIES OUTPUT_NAME Loom DEBUG_POSTFIX "")
+    target_compile_features(LoomProjectLauncher PRIVATE cxx_std_17)
+    target_link_libraries(LoomProjectLauncher PRIVATE shell32)
+    install(TARGETS LoomProjectLauncher RUNTIME DESTINATION .)
+endif()
 install(DIRECTORY Tools/ProjectWorkflow/ DESTINATION tools/ProjectWorkflow PATTERN ".idea" EXCLUDE)
 install(DIRECTORY Templates/Minimal/ DESTINATION templates/Minimal
         PATTERN ".idea" EXCLUDE PATTERN ".git" EXCLUDE PATTERN "Generated" EXCLUDE)

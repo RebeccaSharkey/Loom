@@ -66,6 +66,14 @@ This does a **clean install**: it deletes the target folder, builds both
 configurations, installs them, and sets `LOOM_ROOT`. Press Enter at the prompt to
 reuse your current install location.
 
+After installation it asks **Add Loom to your Start menu? [y/N]**. Choose yes to
+create or update a per-user **Loom** shortcut pointing to the installed Loom.exe.
+Updates at the same installation path keep that shortcut working. Choosing no
+leaves existing shortcuts unchanged. This does not require administrator rights.
+
+Scripted `-Yes` installs skip this optional prompt by default. Use `-StartMenu Add`
+to create/update the shortcut explicitly, or `-StartMenu Skip` to skip it.
+
 The installer refuses to delete a folder that is not an existing Loom install, so
 a mistyped path cannot destroy unrelated files.
 
@@ -137,16 +145,29 @@ consuming projects.
 
 ## Releasing
 
+Double-click `Tools\UpdateVersion.bat` and enter the next `major.minor.patch`
+version. Invalid, equal or lower versions are rejected and the prompt repeats.
+The tool updates CMake, vcpkg metadata, the starter descriptor and the version/tag
+examples in both build/game guides. It validates all five files before writing,
+preserves their formatting, and restores earlier changes if a write fails.
+Backups are kept under `Generated/VersionUpdates`. Existing games, installed SDKs,
+descriptor schema versions and template-format versions are not modified.
+Run Install.bat afterwards, then commit/push and create the release tag.
+
+For scripting, `UpdateVersion.bat -Version <version>` applies the same validation
+but fails without prompting when the value is invalid. The interactive workflow
+needs no terminal commands.
+
 Releases are produced by `.github/workflows/release.yml`, triggered by a version
 tag:
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 The workflow builds, installs, verifies the result against the smoke test, then
-attaches `Loom-v0.1.0-win64.zip` to the GitHub Release. Nothing is published
+attaches `Loom-v0.2.0-win64.zip` to the GitHub Release. Nothing is published
 unless a tag is pushed.
 
 ---

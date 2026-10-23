@@ -34,11 +34,8 @@ TemplateVersion; failures return a nonzero status. Omit Modules for a Core-only
 project. Render2D is an optional stub, not a working renderer.
 
 For the launcher, double-click the installed
-`tools/ProjectWorkflow/New-LoomProjectGui.bat`, or run:
+`Loom.exe` at the root of your Loom SDK installation. 
 
-```powershell
-& "$env:LOOM_ROOT/tools/ProjectWorkflow/New-LoomProjectGui.bat"
-```
 
 Enter a code identifier, display name, final destination and engine installation.
 Browse for a parent directory to fill destination with parent/code-identifier.
@@ -129,7 +126,7 @@ See [descriptor schema](LoomProject.schema.json) and
 ```json
 {
   "FileVersion": 1,
-  "EngineVersion": "0.1.0",
+  "EngineVersion": "0.2.0",
   "Name": "MyGame",
   "DisplayName": "My Game",
   "ContentRoot": "Content",

@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
     [string]$Prefix,   # optional, for scripted use later (CI)
-    [switch]$Yes
+    [switch]$Yes,
+    [ValidateSet('Ask','Add','Skip')]
+    [string]$StartMenu = 'Ask'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -82,3 +84,23 @@ Write-Host ""
 Write-Host "Loom installed to $Prefix" -ForegroundColor Green
 Write-Host "LOOM_ROOT set for your user account."
 Write-Host "Open a NEW terminal (and restart CLion) for it to take effect." -ForegroundColor Yellow
+
+# Keep existing scripted -Yes installs non-interactive unless explicitly requested.
+$shortcutChoice = $StartMenu
+if ($Yes -and -not $PSBoundParameters.ContainsKey('StartMenu')) { $shortcutChoice = 'Skip' }
+if ($shortcutChoice -eq 'Ask') {
+    Write-Host ""
+    $answer = Read-Host "Add Loom to your Start menu? [y/N]"
+    $shortcutChoice = if ($answer.Trim() -match '^(y|yes)$') { 'Add' } else { 'Skip' }
+}
+if ($shortcutChoice -eq 'Add') {
+    try {
+        Import-Module (Join-Path $PSScriptRoot 'Loom.Shortcuts.psm1') -Force
+        $shortcutPath = Set-LoomStartMenuShortcut -InstallRoot $Prefix
+        Write-Host "Start menu shortcut created or updated: $shortcutPath" -ForegroundColor Green
+    } catch {
+        Write-Warning "Loom is installed, but its Start menu shortcut could not be created: $($_.Exception.Message)"
+    }
+} else {
+    Write-Host "Start menu shortcut skipped. Existing shortcuts are unchanged."
+}
