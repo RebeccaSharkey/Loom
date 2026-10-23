@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Loom project descriptor v1",
+  "type": "object",
+  "required": ["FileVersion", "EngineVersion", "Name", "DisplayName", "ContentRoot", "Modules"],
+  "properties": {
+    "FileVersion": { "const": 1 },
+    "EngineVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "Name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$", "description": "CMake target identifier; Windows device names and CMake reserved targets are rejected." },
+    "DisplayName": { "type": "string", "minLength": 1, "pattern": "^[^;\\r\\n]+$" },
+    "ContentRoot": { "type": "string", "minLength": 1, "description": "Project-relative, forward-slash path; absolute paths, parent traversal, colon, backslash, semicolon and newline are rejected." },
+    "Modules": { "type": "array", "uniqueItems": true, "items": { "enum": ["Render2D"] } },
+    "TemplateVersion": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": true
+}

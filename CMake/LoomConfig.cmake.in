@@ -1,9 +1,16 @@
 ﻿@PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-list(APPEND CMAKE_PREFIX_PATH "${PACKAGE_PREFIX_DIR}/third-party")
-
-find_dependency(SDL3 CONFIG)
+set(Loom_VERSION "@PROJECT_VERSION@")
+set(Loom_MSVC_VERSION "@MSVC_VERSION@")
+if(DEFINED MSVC_VERSION AND NOT MSVC_VERSION STREQUAL Loom_MSVC_VERSION)
+    message(FATAL_ERROR "Loom: compiler mismatch: this SDK uses MSVC ${Loom_MSVC_VERSION}; consumer uses ${MSVC_VERSION}. Select the matching VS toolset or rebuild Loom.")
+endif()
+if(DEFINED CMAKE_MSVC_RUNTIME_LIBRARY AND NOT CMAKE_MSVC_RUNTIME_LIBRARY STREQUAL "" AND NOT CMAKE_MSVC_RUNTIME_LIBRARY STREQUAL "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    message(FATAL_ERROR "Loom: use the DLL MSVC runtime (/MD in Release, /MDd in Debug), matching this installation.")
+endif()
+set(SDL3_DIR "${PACKAGE_PREFIX_DIR}/third-party/share/sdl3")
+find_dependency(SDL3 CONFIG PATHS "${SDL3_DIR}" NO_DEFAULT_PATH)
 
 # Core is not optional.
 include("${CMAKE_CURRENT_LIST_DIR}/LoomCoreTargets.cmake")

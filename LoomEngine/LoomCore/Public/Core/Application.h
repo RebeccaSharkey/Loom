@@ -17,6 +17,8 @@ namespace Loom
     {
         std::string Name = "Loom Application";
         WindowSpecification WindowSpec;
+        std::string DevelopmentContentRoot;
+        std::string PackagedContentRoot = "Content";
 
         ApplicationSpecification(const std::string& name = "Loom Application", const WindowSpecification& windowSpec = WindowSpecification())
             : Name(name), WindowSpec(windowSpec)
@@ -37,6 +39,9 @@ namespace Loom
         virtual void OnStart() {}
         virtual void OnUpdate(const float DeltaTime) {}
         virtual void OnShutdown() {}
+        void RequestExit() { bIsRunning = false; }
+        static bool SmokeTest;
+        static bool PackagedContent;
 
     private:
         bool bIsRunning = true;

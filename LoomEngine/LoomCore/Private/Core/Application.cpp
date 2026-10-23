@@ -8,6 +8,8 @@
 
 // Public Sources
 #include "Core/Time.h"
+#include "Core/Paths.h"
+#include <stdexcept>
 #include "Window/WindowEvents.h"
 #include "Window/Window.h"
 
@@ -17,15 +19,19 @@
 namespace Loom
 {
     Application* Application::Instance = nullptr;
+    bool Application::SmokeTest = false;
+    bool Application::PackagedContent = false;
 
     Application::Application(const ApplicationSpecification &spec)
         :m_Specification(spec)
     {
-        // TODO: Set working directory
-
-        LOOM_VERIFY(Log::Init(), "Logging initialization failed");
+        Paths::Initialize(spec.Name, PackagedContent ? "" : spec.DevelopmentContentRoot, spec.PackagedContentRoot);
+        if (!Log::Init()) throw std::runtime_error("Loom: logging initialization failed");
 
         LOOM_LOG_NOTICE("Loom", "Starting Loom Engine...");
+        LOOM_LOG_NOTICE("Paths", "Content: %s", Paths::Content().string().c_str());
+        LOOM_LOG_NOTICE("Paths", "User data: %s", Paths::UserData().string().c_str());
+        LOOM_LOG_NOTICE("Paths", "Logs: %s", Paths::Logs().string().c_str());
 
         LOOM_ASSERT(!Instance, "Application already exists");
         Instance = this;
@@ -59,6 +65,7 @@ namespace Loom
         auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
         OnStart();
+        if (SmokeTest) RequestExit();
 
         while (bIsRunning)
         {

@@ -115,3 +115,19 @@ jobs:
             & ".\Generated\msvc\$cfg\LoomInstallSmokeTest.exe"
             if ($LASTEXITCODE -ne 0) { throw "$cfg smoke test failed with exit code $LASTEXITCODE" }
           }
+
+      - name: Prove generated-project workflow (Debug, Release, paths and failures)
+        shell: pwsh
+        env:
+          SDL_VIDEODRIVER: dummy
+        run: |
+          ./Tests/ProjectWorkflow/Test-ProjectWorkflow.ps1 -EngineRoot $env:LOOM_INSTALL_DIR -RunApplications -RunGui
+
+      - name: Upload workflow acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-0-acceptance
+          path: |
+            Generated/WorkflowAcceptance/**/acceptance.json
+            Generated/WorkflowAcceptance/**/commands.log

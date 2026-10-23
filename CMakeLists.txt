@@ -31,6 +31,11 @@ install(EXPORT LoomRender2DTargets NAMESPACE Loom:: DESTINATION lib/cmake/Loom)
 
 # Generate Looms config file
 include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/LoomConfigVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMinorVersion
+)
 configure_package_config_file(
         CMake/LoomConfig.cmake.in
         ${CMAKE_CURRENT_BINARY_DIR}/LoomConfig.cmake
@@ -39,6 +44,7 @@ configure_package_config_file(
 
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/LoomConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/LoomConfigVersion.cmake
         DESTINATION lib/cmake/Loom
 )
 
@@ -46,6 +52,12 @@ install(FILES
         CMake/LoomProject.cmake
         DESTINATION lib/cmake/Loom
 )
+
+# Ship the same creation workflow with source builds and downloadable SDKs.
+install(DIRECTORY Tools/ProjectWorkflow/ DESTINATION tools/ProjectWorkflow PATTERN ".idea" EXCLUDE)
+install(DIRECTORY Templates/Minimal/ DESTINATION templates/Minimal
+        PATTERN ".idea" EXCLUDE PATTERN ".git" EXCLUDE PATTERN "Generated" EXCLUDE)
+install(DIRECTORY Docs/ DESTINATION docs FILES_MATCHING PATTERN "*.md" PATTERN "*.json")
 
 # Bundle third party dependencies with the engine install
 install(DIRECTORY ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/

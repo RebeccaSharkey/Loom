@@ -5,10 +5,12 @@ set(LOOMCORE_CORE_SOURCES
         Public/Core/Assert.h
         Public/Core/Types.h
         Public/Core/Time.h
+        Public/Core/Paths.h
 
         Private/Core/Application.cpp
         Private/Core/Assert.cpp
         Private/Core/Time.cpp
+        Private/Core/Paths.cpp
 )
 
 # ----------- Math Module ----------- #

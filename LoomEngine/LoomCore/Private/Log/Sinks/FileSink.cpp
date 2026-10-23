@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Ctrl Alt Delete Games. All rights reserved.
 
 #include "Log/Sinks/FileSink.h"
+#include "Core/Paths.h"
 
 #include <chrono>
 #include <cstring>
@@ -31,15 +32,6 @@ namespace Loom
         FileSink::Shutdown();
     }
 
-    static void CreateLogDirectory()
-    {
-#ifdef LOOM_PLATFORM_WINDOWS
-        _mkdir("Logs");
-#else
-        mkdir("Logs", 0775);
-#endif
-    }
-
     bool FileSink::Init(const bool bInitEnabled, const LogLevel minLogLevel)
     {
         if (!ILogSink::Init(bInitEnabled, minLogLevel))
@@ -48,7 +40,7 @@ namespace Loom
         };
 
         //EnableVirtualTerminalMode();
-        CreateLogDirectory();
+        if (Paths::UserData().empty()) Paths::Initialize("Loom");
 
         // Generate Filename
         const time_t now = time(nullptr);
@@ -60,15 +52,20 @@ namespace Loom
         if (!localtime_r(&now, &localTime)) return false;
 #endif
 
-        snprintf(LogFileName, sizeof(LogFileName), "Logs/Log--%02d-%02d-%04d--%02d-%02d-%02d.log",
+        snprintf(LogFileName, sizeof(LogFileName), "Log--%02d-%02d-%04d--%02d-%02d-%02d.log",
                  localTime.tm_mday, localTime.tm_mon + 1, localTime.tm_year + 1900,
                  localTime.tm_hour, localTime.tm_min, localTime.tm_sec);
 
         // Try to open/create the file
-        FileHandle = fopen(LogFileName, "a");
+        const auto logPath = Paths::Logs() / LogFileName;
+#ifdef LOOM_PLATFORM_WINDOWS
+        FileHandle = _wfopen(logPath.c_str(), L"a");
+#else
+        FileHandle = fopen(logPath.c_str(), "a");
+#endif
         if (!FileHandle)
         {
-            std::cerr<<"Failed to create Log File: "<< LogFileName << std::endl;
+            std::cerr<<"Failed to create Log File: "<< logPath << std::endl;
             return false;
         }
 

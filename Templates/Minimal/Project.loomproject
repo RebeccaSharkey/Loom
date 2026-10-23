@@ -1,0 +1,9 @@
+{
+  "FileVersion": 1,
+  "EngineVersion": "0.1.0",
+  "Name": "__LOOM_NAME__",
+  "DisplayName": "__LOOM_NAME__",
+  "ContentRoot": "Content",
+  "Modules": [],
+  "TemplateVersion": 1
+}

@@ -66,6 +66,13 @@ jobs:
           & ".\Generated\msvc\Debug\LoomInstallSmokeTest.exe"
           if ($LASTEXITCODE -ne 0) { throw "Packaged engine failed its smoke test" }
 
+      - name: Verify generated-project workflow before publishing
+        shell: pwsh
+        env:
+          SDL_VIDEODRIVER: dummy
+        run: |
+          ./Tests/ProjectWorkflow/Test-ProjectWorkflow.ps1 -EngineRoot $env:LOOM_INSTALL_DIR -RunApplications -RunGui
+
       - name: Create archive
         shell: pwsh
         run: |

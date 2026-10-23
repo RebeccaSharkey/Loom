@@ -1,0 +1,11 @@
+Generated/
+Build/
+Logs/
+Saves/
+Settings/
+CMakeUserPresets.json
+.idea/
+.vs/
+.vscode/
+cmake-build-*/
+*.log

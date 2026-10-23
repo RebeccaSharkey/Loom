@@ -19,9 +19,10 @@ What works today:
 
 - Windowing and a fixed application lifecycle (Win32)
 - Event system with typed events and scoped subscriptions
-- Input system with actions, contexts, priorities and 2D axis composition
 - Logging with console and file sinks
 - Install and packaging: games can consume an installed Loom from anywhere on disk
+- Validated project descriptors, generator and Windows new-project launcher
+- Content paths independent of working directory and per-user writable data
 
 What does not exist yet: the renderer, audio, asset loading, scripting.
 
@@ -45,7 +46,7 @@ through your project's `.loomproject` descriptor.
 
 | Module | Contents |
 |---|---|
-| `Loom::Core` | Application, window, input, events, logging, math, time |
+| `Loom::Core` | Application, window events, logging, paths, math, time |
 | `Loom::Render2D` | 2D rendering (stub — not yet implemented) |
 
 ---
@@ -53,8 +54,9 @@ through your project's `.loomproject` descriptor.
 ## Requirements
 
 - Windows 10/11
-- Visual Studio 2022 Build Tools (MSVC v143)
-- CMake 3.25 or newer
+- Visual Studio C++ Build Tools matching the installed SDK (Windows x64)
+- CMake 3.25 or newer; 4.2+ for Visual Studio 2026
+- PowerShell 5.1+ for project creation and the launcher
 - [vcpkg](https://github.com/microsoft/vcpkg) — only needed to *build* the engine,
   not to use an installed one
 

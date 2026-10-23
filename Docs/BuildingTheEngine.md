@@ -8,8 +8,8 @@ For working on Loom itself, and for setting the repository up on a new machine.
 
 | Tool | Notes |
 |---|---|
-| Visual Studio 2022 Build Tools | MSVC v143. The presets pin this generator explicitly. |
-| CMake 3.25+ | Bundled with CLion, or install standalone. |
+| Visual Studio C++ Build Tools | Windows x64. Presets select the newest installed VS; consumers must match the SDK compiler version. |
+| CMake 3.25+ | CMake 4.2+ for VS 2026. Bundled with CLion, or install standalone and add it to PATH. |
 | vcpkg | Needed to build the engine. Not needed to *use* an installed one. |
 | Git | With Git LFS if you intend to commit binary assets. |
 
@@ -121,8 +121,8 @@ to games.
 
 ## Conventions that matter
 
-**Never include an SDL header from anything under `Include/`.** Third-party
-headers must stay in `Source/`. This is what keeps games from needing to know
+**Never include an SDL header from any public engine header.** Third-party
+headers stay in private implementation files. This keeps games from needing to know
 what the engine is built on.
 
 **`CMAKE_DEBUG_POSTFIX` is load-bearing.** Debug libraries get a `d` suffix so
